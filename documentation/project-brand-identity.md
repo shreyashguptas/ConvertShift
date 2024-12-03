@@ -1,5 +1,9 @@
 ## The Complete Value Proposition
 
+**Brand name:** ConvertShift
+
+**Primary Tagline:** "One Tool, Every Format, Total Privacy"
+
 **All-in-One Solution:**
 - No more juggling between multiple websites for different conversions
 - Single destination for images, videos, and other file formats
@@ -11,11 +15,6 @@
 - Zero server uploads, zero data collection
 
 ## Brand Storytelling Elements
-
-**Primary Tagline Options:**
-- "Convert Locally, Shift Securely"
-- "Your Files, Your Control"
-- "One Tool, Every Format, Total Privacy"
 
 **Brand Story Narrative:**
 "In a world where your personal files bounce between unknown servers and you're forced to navigate through a maze of ad-filled websites, ConvertShift stands as your private conversion sanctuary. Transform any file, any format, right on your device – no uploads, no servers, no compromises."
