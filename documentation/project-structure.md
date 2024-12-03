@@ -13,7 +13,15 @@ file-converter/
 ```
 frontend/
 ├── app/              # Next.js app directory (routes and pages)
+│   ├── layout.tsx    # Root layout with sidebar
+│   ├── page.tsx      # Home page
+│   └── image-compression/  # Image compression feature
+│       └── page.tsx       # Image compression page
 ├── components/       # Reusable React components
+│   ├── ui/          # UI components (buttons, inputs, etc.)
+│   ├── layout/      # Layout components
+│   │   └── sidebar.tsx  # Navigation sidebar
+│   └── analytics.tsx    # Analytics component
 ├── lib/             # Utility functions and shared logic
 ├── public/          # Static assets
 ├── .next/           # Next.js build output (gitignored)
@@ -37,6 +45,7 @@ backend/
 ```
 documentation/
 ├── project-overview.md    # Project goals and technology stack
+├── development-guide.md   # Development setup and guidelines
 └── project-structure.md   # Folder structure documentation
 ```
 

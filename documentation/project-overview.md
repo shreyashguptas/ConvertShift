@@ -1,15 +1,24 @@
 # File Converter Project Overview
 
 ## Project Goal
-The File Converter is a web application designed to provide users with a simple and efficient way to convert files between different formats. It features a modern web interface for file uploads and conversions, with a separate backend handling the actual conversion processes.
+The File Converter is a web application designed to provide users with a simple and efficient way to convert files between different formats. It features a modern web interface with a sidebar navigation for easy access to different tools, starting with image compression capabilities.
 
 ## Core Features
 - File upload functionality
 - Multiple format conversion support
-- Modern, responsive user interface
+- Modern, responsive user interface with sidebar navigation
 - Secure file handling
-- RESTful API backend
 - Client-side file processing
+- Image compression with size control
+- Cross-platform compatibility
+
+## Available Tools
+1. Image Compression
+   - Supports PNG, JPG, and JPEG formats
+   - Compression range: 100MB to 100KB
+   - Custom target size selection
+   - Client-side processing using WebAssembly
+   - Instant download after compression
 
 ## Key Architecture Decisions
 
@@ -35,11 +44,17 @@ The server's role is intentionally lightweight:
 ### Frontend (Next.js)
 - **Framework**: Next.js 14
 - **UI Library**: React
-- **Styling**: Tailwind CSS
+- **Styling**: 
+  - Tailwind CSS for utility-first styling
+  - shadcn/ui for component library
 - **Type Safety**: TypeScript
 - **Package Manager**: pnpm
-- **File Processing**: Client-side JavaScript libraries for file conversion
+- **File Processing**:
+  - browser-image-compression for image optimization
+  - Web Workers for background processing
 - **Analytics**: Vercel Analytics for usage tracking
+- **Routing**: Next.js App Router
+- **Components**: Mix of server and client components
 
 ### Backend (Node.js)
 - **Runtime**: Node.js
@@ -52,7 +67,8 @@ The server's role is intentionally lightweight:
 The project follows a modern client-server architecture with:
 - Decoupled frontend and backend services
 - RESTful API communication
-- Scalable folder structure
+- Feature-based folder structure
 - Environment-based configuration
 - Client-side processing for all file conversions
 - Minimal server footprint
+- Sidebar navigation for tool access
