@@ -39,6 +39,7 @@ The server's role is intentionally lightweight:
 - **Type Safety**: TypeScript
 - **Package Manager**: pnpm
 - **File Processing**: Client-side JavaScript libraries for file conversion
+- **Analytics**: Vercel Analytics for usage tracking
 
 ### Backend (Node.js)
 - **Runtime**: Node.js
