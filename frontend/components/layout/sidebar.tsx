@@ -11,11 +11,14 @@ export function Sidebar() {
   return (
     <div className="space-y-4 py-4 flex flex-col h-full bg-gray-900 text-white">
       <div className="px-3 py-2 flex-1">
-        <Link href="/" className="flex items-center pl-3 mb-14">
-          <h1 className="text-2xl font-bold">
-            ConvertShift
-          </h1>
-        </Link>
+        <div className="pl-3 mb-14">
+          <Link href="/" className="flex items-center">
+            <h1 className="text-2xl font-bold">
+              ConvertShift
+            </h1>
+          </Link>
+          <div className="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent mt-4" />
+        </div>
         <div className="space-y-1">
           {routes.map((route) => (
             <Link
