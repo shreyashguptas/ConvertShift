@@ -25,7 +25,7 @@ interface CompressionResult {
   fileName: string
 }
 
-export default function ImageCompression() {
+export default function ImageCompressor() {
   const [file, setFile] = useState<File | null>(null)
   const [outputSize, setOutputSize] = useState<string>('')
   const [sizeUnit, setSizeUnit] = useState<'MB' | 'KB'>('MB')

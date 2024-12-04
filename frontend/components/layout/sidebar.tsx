@@ -6,8 +6,8 @@ import { cn } from '@/lib/utils'
 
 const routes = [
   {
-    label: 'Image Compression',
-    href: '/image-compression',
+    label: 'Image Compressor',
+    href: '/image-compressor',
     icon: '🖼️'
   },
   // Future routes will be added here

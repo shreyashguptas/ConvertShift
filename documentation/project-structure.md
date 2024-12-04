@@ -15,8 +15,8 @@ frontend/
 ├── app/              # Next.js app directory (routes and pages)
 │   ├── layout.tsx    # Root layout with sidebar and favicon config
 │   ├── page.tsx      # Home page
-│   └── image-compression/  # Image compression feature
-│       └── page.tsx       # Image compression page component
+│   └── image-compressor/  # Image compressor feature
+│       └── page.tsx       # Image compressor page component
 ├── components/       # Reusable React components
 │   ├── ui/          # UI components
 │   │   ├── button.tsx     # Button component
@@ -81,7 +81,7 @@ documentation/
 
 ### Page Components
 - **Home**: Welcome page with project information
-- **Image Compression**: Image compression tool
+- **Image Compressor**: Image compression tool
   - File upload interface
   - Size control inputs
   - Compression results display

@@ -1,7 +1,7 @@
 # File Converter Project Overview
 
 ## Project Goal
-The File Converter is a web application designed to provide users with a simple and efficient way to convert files between different formats. It features a modern web interface with a sidebar navigation for easy access to different tools, starting with image compression capabilities.
+The File Converter is a web application designed to provide users with a simple and efficient way to convert files between different formats. It features a modern web interface with a sidebar navigation for easy access to different tools, starting with the Image Compressor.
 
 ## Core Features
 - File upload functionality with drag-and-drop support
@@ -17,7 +17,7 @@ The File Converter is a web application designed to provide users with a simple 
 - Progressive Web App support
 
 ## Available Tools
-1. Image Compression
+1. Image Compressor
    - Supports multiple formats:
      - Raster formats: PNG, JPG, JPEG, WebP, AVIF
      - Vector format: SVG (with special handling)
