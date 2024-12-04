@@ -5,19 +5,8 @@ import { routes, comingSoonTools } from '@/config/routes'
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4 md:p-6 lg:p-8">
+    <div className="flex flex-col items-center justify-center p-4 md:p-6 lg:p-8">
       <div className="max-w-6xl w-full space-y-8 text-center">
-        {/* Logo Section */}
-        {/* <div className="relative w-48 h-48 mx-auto mb-6">
-          <Image
-            src="/images/Logo.jpg"
-            alt="ConvertShift Logo"
-            fill
-            className="object-contain"
-            priority
-          />
-        </div> */}
-
         {/* Brand and Tagline */}
         <h1 className="text-5xl font-bold text-gray-900 mb-4">
           ConvertShift

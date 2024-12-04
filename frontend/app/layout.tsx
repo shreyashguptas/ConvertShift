@@ -1,10 +1,11 @@
 import { Analytics } from '@/components/analytics';
 import { Sidebar } from '@/components/layout/sidebar';
+import { Footer } from '@/components/layout/footer';
 import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'File Converter',
+  title: 'ConvertShift',
   description: 'Convert your files between different formats easily and securely in your browser',
   icons: {
     icon: [
@@ -41,22 +42,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <head>
-        <link rel="icon" href="/images/favicon.ico" sizes="32x32" />
-        <link rel="icon" href="/images/favicon-32x32.png" sizes="32x32" type="image/png" />
-        <link rel="icon" href="/images/favicon-16x16.png" sizes="16x16" type="image/png" />
-        <link rel="apple-touch-icon" href="/images/apple-touch-icon.png" sizes="180x180" />
-        <link rel="manifest" href="/site.webmanifest" />
-      </head>
-      <body className="font-sans antialiased">
-        <div className="relative h-screen">
+    <html lang="en" className="h-full">
+      <body className="font-sans antialiased h-full">
+        <div className="h-full flex">
           <div className="hidden h-full md:flex md:w-72 md:flex-col md:fixed md:inset-y-0 z-[80]">
             <Sidebar />
           </div>
-          <main className="md:pl-72">
-            {children}
-          </main>
+          <div className="flex-1 flex flex-col md:pl-72">
+            <main className="flex-1 flex flex-col h-full">
+              <div className="flex-1 overflow-auto">
+                {children}
+              </div>
+              <Footer />
+            </main>
+          </div>
         </div>
         <Analytics />
       </body>
