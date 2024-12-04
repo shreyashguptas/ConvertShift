@@ -4,13 +4,15 @@
 The File Converter is a web application designed to provide users with a simple and efficient way to convert files between different formats. It features a modern web interface with a sidebar navigation for easy access to different tools, starting with image compression capabilities.
 
 ## Core Features
-- File upload functionality
+- File upload functionality with drag-and-drop support
 - Multiple format conversion support
 - Modern, responsive user interface with sidebar navigation
 - Secure file handling
 - Client-side file processing
 - Image compression with size control
 - Cross-platform compatibility
+- Real-time compression feedback
+- Format-specific optimizations
 
 ## Available Tools
 1. Image Compression
@@ -20,12 +22,20 @@ The File Converter is a web application designed to provide users with a simple 
    - Format-specific optimizations:
      - WebP and AVIF: Native format compression
      - SVG: Vector-aware handling with optimization suggestions
-   - Compression range: 100MB to 100KB
-   - Custom target size selection
-   - Client-side processing using WebAssembly
-   - Instant download after compression
-   - Compression statistics display
-   - Format-specific handling and recommendations
+   - Features:
+     - Compression range: 100MB to 100KB
+     - Custom target size selection with KB/MB units
+     - Intuitive file upload interface
+     - File information display (name, size, type)
+     - Compression statistics
+     - Manual download control
+   - User Interface:
+     - Modern file upload area with icon
+     - Clear file information display
+     - Precise size control with validation
+     - Progress indication during compression
+     - Detailed compression results
+     - Format-specific recommendations
 
 ## Key Architecture Decisions
 
@@ -54,6 +64,7 @@ The server's role is intentionally lightweight:
 - **Styling**: 
   - Tailwind CSS for utility-first styling
   - shadcn/ui for component library
+  - Custom component styling
 - **Type Safety**: TypeScript
 - **Package Manager**: pnpm
 - **File Processing**:
@@ -62,6 +73,16 @@ The server's role is intentionally lightweight:
   - Web Workers for background processing
   - Native format support for WebP and AVIF
   - Vector-aware handling for SVG
+- **UI Components**:
+  - Custom file upload interface
+  - Responsive sidebar navigation
+  - Interactive form controls
+  - Progress indicators
+  - Format-specific UI elements
+- **Input Validation**:
+  - Custom numeric input handling
+  - File type validation
+  - Size constraints enforcement
 - **Analytics**: Vercel Analytics for usage tracking
 - **Routing**: Next.js App Router
 - **Components**: Mix of server and client components
@@ -72,6 +93,31 @@ The server's role is intentionally lightweight:
 - **Middleware**: CORS for cross-origin requests
 - **Environment**: dotenv for configuration
 - **Development**: nodemon for hot reloading
+
+## User Experience Features
+1. **File Upload**:
+   - Visual upload area with icon
+   - File type validation
+   - Size limit enforcement
+   - Clear error messages
+
+2. **File Information**:
+   - Prominent file details display
+   - Format-specific badges
+   - Size information
+   - Type indicators
+
+3. **Compression Controls**:
+   - Precise size input with validation
+   - Unit selection (KB/MB)
+   - Clear action buttons
+   - Processing indicators
+
+4. **Results Display**:
+   - Compression statistics
+   - Before/after size comparison
+   - Compression ratio
+   - Download control
 
 ## Architecture
 The project follows a modern client-server architecture with:
