@@ -5,10 +5,10 @@ import { routes, comingSoonTools } from '@/config/routes'
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
-      <div className="max-w-4xl w-full space-y-8 text-center">
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4 md:p-6 lg:p-8">
+      <div className="max-w-6xl w-full space-y-8 text-center">
         {/* Logo Section */}
-        <div className="relative w-48 h-48 mx-auto mb-6">
+        {/* <div className="relative w-48 h-48 mx-auto mb-6">
           <Image
             src="/images/Logo.jpg"
             alt="ConvertShift Logo"
@@ -16,7 +16,7 @@ export default function Home() {
             className="object-contain"
             priority
           />
-        </div>
+        </div> */}
 
         {/* Brand and Tagline */}
         <h1 className="text-5xl font-bold text-gray-900 mb-4">
@@ -34,16 +34,19 @@ export default function Home() {
         </div>
 
         {/* Conversion Tools Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-3xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto px-4">
           {/* Active Tools */}
           {routes.map((route) => (
-            <Link key={route.href} href={route.href}>
+            <Link key={route.href} href={route.href} className="block">
               <Button
                 variant="outline"
-                className="w-full h-24 text-lg flex flex-col items-center justify-center space-y-2 hover:bg-gray-50 hover:border-blue-500 transition-all"
+                className="relative w-full h-64 text-lg hover:bg-gray-50 hover:border-blue-500 transition-all p-0 overflow-hidden"
               >
-                <span className="text-2xl">{route.icon}</span>
-                {route.label}
+                <div className="absolute inset-0 p-6 flex flex-col items-center">
+                  <span className="text-3xl mb-3">{route.icon}</span>
+                  <h2 className="text-xl font-medium mb-2">{route.label}</h2>
+                  <p className="text-sm text-gray-600 font-normal leading-relaxed">{route.description}</p>
+                </div>
               </Button>
             </Link>
           ))}
@@ -54,11 +57,14 @@ export default function Home() {
               key={tool.label}
               variant="outline"
               disabled
-              className="w-full h-24 text-lg flex flex-col items-center justify-center space-y-2 opacity-60 cursor-not-allowed"
+              className="relative w-full h-64 text-lg opacity-60 cursor-not-allowed p-0 overflow-hidden"
             >
-              <span className="text-2xl">{tool.icon}</span>
-              {tool.label}
-              <span className="text-xs text-gray-500">Coming Soon</span>
+              <div className="absolute inset-0 p-6 flex flex-col items-center">
+                <span className="text-3xl mb-3">{tool.icon}</span>
+                <h2 className="text-xl font-medium mb-2">{tool.label}</h2>
+                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded mb-2">Coming Soon</span>
+                <p className="text-sm text-gray-500 font-normal leading-relaxed">{tool.description}</p>
+              </div>
             </Button>
           ))}
         </div>
