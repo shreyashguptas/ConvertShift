@@ -6,7 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Download, Upload, FileIcon } from 'lucide-react'
+import { Download, Upload, FileIcon, X } from 'lucide-react'
+import JSZip from 'jszip'
 
 // Define supported formats and their MIME types
 const SUPPORTED_FORMATS = {
@@ -17,6 +18,9 @@ const SUPPORTED_FORMATS = {
   'image/svg+xml': { ext: 'svg', name: 'SVG' }
 }
 
+const MAX_FILES = 1000;
+const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+
 interface CompressionResult {
   blob: Blob
   originalSize: number
@@ -26,38 +30,42 @@ interface CompressionResult {
 }
 
 export default function ImageCompressor() {
-  const [file, setFile] = useState<File | null>(null)
+  const [files, setFiles] = useState<File[]>([])
   const [outputSize, setOutputSize] = useState<string>('')
   const [sizeUnit, setSizeUnit] = useState<'MB' | 'KB'>('MB')
   const [isProcessing, setIsProcessing] = useState(false)
-  const [compressionResult, setCompressionResult] = useState<CompressionResult | null>(null)
+  const [progress, setProgress] = useState<number>(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
-      const selectedFile = event.target.files[0]
-      const fileType = selectedFile.type
-
-      // Check if file type is supported
-      if (!Object.keys(SUPPORTED_FORMATS).includes(fileType)) {
-        alert('Please select a supported image file (PNG, JPG, JPEG, WebP, AVIF, or SVG)')
+    if (event.target.files) {
+      const selectedFiles = Array.from(event.target.files)
+      
+      // Check number of files
+      if (selectedFiles.length > MAX_FILES) {
+        alert(`Maximum ${MAX_FILES} files allowed`)
         return
       }
 
-      // Check file size
-      if (selectedFile.size > 100 * 1024 * 1024) {
-        alert('File size must be less than 100MB')
-        return
-      }
+      // Validate each file
+      const validFiles = selectedFiles.filter(file => {
+        if (!Object.keys(SUPPORTED_FORMATS).includes(file.type)) {
+          alert(`File "${file.name}" is not a supported image format`)
+          return false
+        }
+        if (file.size > MAX_FILE_SIZE) {
+          alert(`File "${file.name}" exceeds 100MB limit`)
+          return false
+        }
+        return true
+      })
 
-      // Special handling for SVG files
-      if (fileType === 'image/svg+xml') {
-        alert('Note: SVG files are already in a vector format and may not benefit from traditional compression. Consider optimizing the SVG markup instead.')
-      }
-
-      setFile(selectedFile)
-      setCompressionResult(null) // Reset previous results
+      setFiles(prevFiles => [...prevFiles, ...validFiles])
     }
+  }
+
+  const removeFile = (index: number) => {
+    setFiles(prevFiles => prevFiles.filter((_, i) => i !== index))
   }
 
   const compressImage = async (file: File, targetSize: number): Promise<Blob> => {
@@ -65,40 +73,31 @@ export default function ImageCompressor() {
 
     // Special handling for SVG
     if (fileType === 'image/svg+xml') {
-      // For SVG, we'll just return the original file as it's already vector-based
       return file
     }
 
-    // For AVIF and WebP, we'll use their native formats for best compression
     const options = {
       maxSizeMB: targetSize / (1024 * 1024),
       useWebWorker: true,
-      fileType: fileType, // Preserve the original format
-      initialQuality: 0.7, // Start with good quality
+      fileType: fileType,
+      initialQuality: 0.7,
     }
 
     try {
       return await imageCompression(file, options)
     } catch (error) {
       console.error('Error during compression:', error)
-      throw new Error('Compression failed')
+      throw new Error(`Failed to compress ${file.name}`)
     }
   }
 
   const handleConvert = async () => {
-    if (!file || !outputSize) return
+    if (!files.length || !outputSize) return
 
     try {
       setIsProcessing(true)
       const targetSize = Number(outputSize) * (sizeUnit === 'MB' ? 1024 * 1024 : 1024)
       
-      // Don't allow target size larger than original
-      if (targetSize >= file.size) {
-        alert('Target size must be smaller than original file size')
-        setIsProcessing(false)
-        return
-      }
-
       // Don't allow target size smaller than 100KB
       if (targetSize < 100 * 1024) {
         alert('Target size cannot be smaller than 100KB')
@@ -106,37 +105,75 @@ export default function ImageCompressor() {
         return
       }
 
-      const compressedBlob = await compressImage(file, targetSize)
-      
-      // Calculate compression stats
-      const result: CompressionResult = {
-        blob: compressedBlob,
-        originalSize: file.size,
-        compressedSize: compressedBlob.size,
-        compressionRatio: (1 - (compressedBlob.size / file.size)) * 100,
-        fileName: file.name
+      const results: CompressionResult[] = []
+      const zip = new JSZip()
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+        try {
+          const compressedBlob = await compressImage(file, targetSize)
+          
+          results.push({
+            blob: compressedBlob,
+            originalSize: file.size,
+            compressedSize: compressedBlob.size,
+            compressionRatio: (1 - (compressedBlob.size / file.size)) * 100,
+            fileName: file.name
+          })
+
+          setProgress(((i + 1) / files.length) * 100)
+        } catch (error) {
+          console.error(`Error compressing ${file.name}:`, error)
+        }
       }
 
-      setCompressionResult(result)
+      // Create download
+      if (results.length === 1) {
+        // Single file download
+        const url = URL.createObjectURL(results[0].blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `compressed-${results[0].fileName}`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+      } else if (results.length > 1) {
+        // Create zip file
+        results.forEach(result => {
+          zip.file(`compressed-${result.fileName}`, result.blob)
+        })
+        
+        const zipBlob = await zip.generateAsync({ type: 'blob' })
+        const url = URL.createObjectURL(zipBlob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'compressed-images.zip'
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+      }
+
+      // Show compression results
+      const totalOriginalSize = results.reduce((sum, r) => sum + r.originalSize, 0)
+      const totalCompressedSize = results.reduce((sum, r) => sum + r.compressedSize, 0)
+      const avgCompressionRatio = (1 - (totalCompressedSize / totalOriginalSize)) * 100
+
+      alert(
+        `Compression complete!\n` +
+        `Files processed: ${results.length}\n` +
+        `Total original size: ${(totalOriginalSize / (1024 * 1024)).toFixed(2)} MB\n` +
+        `Total compressed size: ${(totalCompressedSize / (1024 * 1024)).toFixed(2)} MB\n` +
+        `Average compression ratio: ${avgCompressionRatio.toFixed(1)}%`
+      )
     } catch (error) {
-      console.error('Error compressing image:', error)
-      alert('Error compressing image. Please try again.')
+      console.error('Error compressing images:', error)
+      alert('Error compressing images. Please try again.')
     } finally {
       setIsProcessing(false)
+      setProgress(0)
     }
-  }
-
-  const handleDownload = () => {
-    if (!compressionResult) return
-
-    const url = URL.createObjectURL(compressionResult.blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `compressed-${compressionResult.fileName}`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
   }
 
   const formatSize = (bytes: number) => {
@@ -146,14 +183,6 @@ export default function ImageCompressor() {
     return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
   }
 
-  const handleSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    // Only allow numbers and decimal point
-    if (value === '' || /^\d*\.?\d*$/.test(value)) {
-      setOutputSize(value)
-    }
-  }
-
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
@@ -161,7 +190,7 @@ export default function ImageCompressor() {
         <div className="space-y-4">
           <div>
             <Label htmlFor="file-upload" className="block text-sm font-medium text-gray-700 mb-2">
-              Upload Image (PNG, JPG, JPEG, WebP, AVIF, SVG)
+              Upload Images (PNG, JPG, JPEG, WebP, AVIF, SVG)
             </Label>
             <div className="relative">
               <Button 
@@ -171,7 +200,7 @@ export default function ImageCompressor() {
               >
                 <Upload className="h-6 w-6 text-gray-600" />
                 <span className="text-sm text-gray-600">
-                  {file ? 'Change File' : 'Choose File'}
+                  Choose Files (up to {MAX_FILES})
                 </span>
               </Button>
               <Input
@@ -181,27 +210,38 @@ export default function ImageCompressor() {
                 ref={fileInputRef}
                 accept=".png,.jpg,.jpeg,.webp,.avif,.svg,image/png,image/jpeg,image/webp,image/avif,image/svg+xml"
                 className="hidden"
+                multiple
               />
             </div>
-            {file && (
-              <div className="mt-4 p-4 border border-blue-100 bg-blue-50 rounded-lg">
-                <div className="flex items-start space-x-3">
-                  <FileIcon className="w-5 h-5 text-blue-500 mt-1" />
-                  <div className="flex-1">
-                    <h3 className="font-medium text-blue-900">Selected File</h3>
-                    <div className="mt-1 space-y-1">
-                      <p className="text-sm text-blue-800 font-medium">
-                        {file.name}
-                      </p>
-                      <div className="flex items-center space-x-2 text-sm text-blue-700">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded bg-blue-100 text-blue-800">
-                          {SUPPORTED_FORMATS[file.type as keyof typeof SUPPORTED_FORMATS]?.name || 'Unknown'}
+
+            {/* File List */}
+            {files.length > 0 && (
+              <div className="mt-4 space-y-2">
+                <div className="text-sm font-medium text-gray-700">
+                  Selected Files ({files.length})
+                </div>
+                <div className="max-h-40 overflow-y-auto space-y-2">
+                  {files.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                      <div className="flex items-center space-x-2">
+                        <FileIcon className="w-4 h-4 text-gray-500" />
+                        <span className="text-sm text-gray-600 truncate max-w-[200px]">
+                          {file.name}
                         </span>
-                        <span>•</span>
-                        <span>{formatSize(file.size)}</span>
+                        <span className="text-xs text-gray-500">
+                          ({formatSize(file.size)})
+                        </span>
                       </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeFile(index)}
+                        className="h-6 w-6 p-0"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
-                  </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -210,7 +250,7 @@ export default function ImageCompressor() {
           <div className="flex gap-4">
             <div className="flex-1">
               <Label htmlFor="output-size" className="block text-sm font-medium text-gray-700">
-                Target Size
+                Target Size (per file)
               </Label>
               <Input
                 id="output-size"
@@ -220,7 +260,12 @@ export default function ImageCompressor() {
                 min="0.1"
                 step="0.1"
                 value={outputSize}
-                onChange={handleSizeChange}
+                onChange={(e) => {
+                  const value = e.target.value
+                  if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                    setOutputSize(value)
+                  }
+                }}
                 className="mt-1"
                 placeholder="Enter size"
               />
@@ -244,43 +289,21 @@ export default function ImageCompressor() {
           <Button 
             onClick={handleConvert} 
             className="w-full bg-blue-600 hover:bg-blue-700" 
-            disabled={!file || !outputSize || isProcessing}
+            disabled={!files.length || !outputSize || isProcessing}
           >
             {isProcessing ? (
-              'Compressing...'
+              <div className="flex items-center space-x-2">
+                <span>Compressing... {Math.round(progress)}%</span>
+              </div>
             ) : (
               <>
                 <Upload className="w-4 h-4 mr-2" />
-                Compress Image
+                Compress {files.length > 1 ? 'Images' : 'Image'}
               </>
             )}
           </Button>
 
-          {compressionResult && (
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg space-y-4">
-              <h2 className="font-semibold text-lg text-gray-900">Compression Results</h2>
-              <div className="space-y-2">
-                <p className="text-sm text-gray-600">
-                  Original size: {formatSize(compressionResult.originalSize)}
-                </p>
-                <p className="text-sm text-gray-600">
-                  Compressed size: {formatSize(compressionResult.compressedSize)}
-                </p>
-                <p className="text-sm text-gray-600">
-                  Compression ratio: {compressionResult.compressionRatio.toFixed(1)}%
-                </p>
-              </div>
-              <Button 
-                onClick={handleDownload}
-                className="w-full bg-green-600 hover:bg-green-700"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Download Compressed Image
-              </Button>
-            </div>
-          )}
-
-          {file?.type === 'image/svg+xml' && (
+          {files.some(file => file.type === 'image/svg+xml') && (
             <p className="text-sm text-amber-600">
               Note: SVG files are vector-based and may not benefit from traditional compression. 
               Consider using an SVG optimizer for better results.
