@@ -3,20 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-
-const routes = [
-  {
-    label: 'Image Compressor',
-    href: '/image-compressor',
-    icon: '🖼️'
-  },
-  // Future routes will be added here
-  // {
-  //   label: 'PDF Tools',
-  //   href: '/pdf-tools',
-  //   icon: '📄'
-  // },
-]
+import { routes } from '@/config/routes'
 
 export function Sidebar() {
   const pathname = usePathname()
@@ -26,7 +13,7 @@ export function Sidebar() {
       <div className="px-3 py-2 flex-1">
         <Link href="/" className="flex items-center pl-3 mb-14">
           <h1 className="text-2xl font-bold">
-            File Converter
+            ConvertShift
           </h1>
         </Link>
         <div className="space-y-1">
