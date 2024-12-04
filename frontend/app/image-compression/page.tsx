@@ -146,6 +146,14 @@ export default function ImageCompression() {
     return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
   }
 
+  const handleSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    // Only allow numbers and decimal point
+    if (value === '' || /^\d*\.?\d*$/.test(value)) {
+      setOutputSize(value)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
@@ -206,11 +214,13 @@ export default function ImageCompression() {
               </Label>
               <Input
                 id="output-size"
-                type="number"
+                type="text"
+                inputMode="decimal"
+                pattern="[0-9]*\.?[0-9]*"
                 min="0.1"
                 step="0.1"
                 value={outputSize}
-                onChange={(e) => setOutputSize(e.target.value)}
+                onChange={handleSizeChange}
                 className="mt-1"
                 placeholder="Enter size"
               />
