@@ -13,7 +13,7 @@ file-converter/
 ```
 frontend/
 ├── app/              # Next.js app directory (routes and pages)
-│   ├── layout.tsx    # Root layout with sidebar
+│   ├── layout.tsx    # Root layout with sidebar and favicon config
 │   ├── page.tsx      # Home page
 │   └── image-compression/  # Image compression feature
 │       └── page.tsx       # Image compression page component
@@ -25,9 +25,18 @@ frontend/
 │   │   └── select.tsx     # Select/Dropdown component
 │   └── layout/      # Layout components
 │       └── sidebar.tsx    # Navigation sidebar component
+├── scripts/         # Utility scripts
+│   └── optimize-favicon.js # Favicon optimization script
+├── public/          # Static assets
+│   ├── images/      # Image assets
+│   │   ├── Favicon.jpg       # Source favicon image
+│   │   ├── favicon.ico       # Generated favicon (32x32)
+│   │   ├── favicon-16x16.png # Generated small favicon
+│   │   ├── favicon-32x32.png # Generated large favicon
+│   │   └── apple-touch-icon.png # Generated Apple icon
+│   └── site.webmanifest    # Generated PWA manifest
 ├── lib/             # Utility functions and shared logic
 │   └── utils.ts     # Utility functions
-├── public/          # Static assets
 ├── styles/          # Global styles
 │   └── globals.css  # Global CSS
 ├── types/           # TypeScript type definitions
@@ -78,12 +87,20 @@ documentation/
   - Compression results display
   - Download functionality
 
+## Scripts
+- **optimize-favicon.js**: Favicon generation script
+  - Generates multiple favicon sizes
+  - Optimizes images for web
+  - Creates PWA manifest
+  - Supports multiple devices
+
 ## Key Configuration Files
 - `.gitignore`: Specifies which files Git should ignore
 - `frontend/package.json`: Frontend dependencies and scripts
   - browser-image-compression
   - lucide-react for icons
   - shadcn/ui components
+  - sharp for image optimization
   - Other development dependencies
 - `backend/package.json`: Backend dependencies and scripts
 - `frontend/tsconfig.json`: TypeScript configuration
@@ -110,6 +127,20 @@ backend/.env         # Backend environment variables
 
 ## Asset Organization
 - Icons and images in public directory
+  - Source favicon image
+  - Generated favicon variants
+  - PWA manifest
 - Component-specific assets
 - Shared utility functions in lib
 - Type definitions in types
+
+## Favicon Generation
+The project includes an automated favicon generation system:
+1. Place source image (`Favicon.jpg`) in `public/images/`
+2. Run `pnpm run optimize-favicon`
+3. Generated files:
+   - favicon.ico (32x32)
+   - favicon-16x16.png
+   - favicon-32x32.png
+   - apple-touch-icon.png (180x180)
+   - site.webmanifest
