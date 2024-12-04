@@ -14,11 +14,18 @@ The File Converter is a web application designed to provide users with a simple 
 
 ## Available Tools
 1. Image Compression
-   - Supports PNG, JPG, and JPEG formats
+   - Supports multiple formats:
+     - Raster formats: PNG, JPG, JPEG, WebP, AVIF
+     - Vector format: SVG (with special handling)
+   - Format-specific optimizations:
+     - WebP and AVIF: Native format compression
+     - SVG: Vector-aware handling with optimization suggestions
    - Compression range: 100MB to 100KB
    - Custom target size selection
    - Client-side processing using WebAssembly
    - Instant download after compression
+   - Compression statistics display
+   - Format-specific handling and recommendations
 
 ## Key Architecture Decisions
 
@@ -51,7 +58,10 @@ The server's role is intentionally lightweight:
 - **Package Manager**: pnpm
 - **File Processing**:
   - browser-image-compression for image optimization
+  - Format-specific compression algorithms
   - Web Workers for background processing
+  - Native format support for WebP and AVIF
+  - Vector-aware handling for SVG
 - **Analytics**: Vercel Analytics for usage tracking
 - **Routing**: Next.js App Router
 - **Components**: Mix of server and client components
