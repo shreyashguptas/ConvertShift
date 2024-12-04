@@ -12,41 +12,21 @@ file-converter/
 ## Frontend Structure
 ```
 frontend/
-├── app/              # Next.js app directory (routes and pages)
-│   ├── layout.tsx    # Root layout with sidebar and favicon config
-│   ├── page.tsx      # Home page
-│   └── image-compressor/  # Image compressor feature
-│       └── page.tsx       # Image compressor page component
-├── components/       # Reusable React components
-│   ├── ui/          # UI components
-│   │   ├── button.tsx     # Button component
-│   │   ├── input.tsx      # Input component
-│   │   ├── label.tsx      # Label component
-│   │   └── select.tsx     # Select/Dropdown component
-│   └── layout/      # Layout components
-│       └── sidebar.tsx    # Navigation sidebar component
-├── scripts/         # Utility scripts
-│   └── optimize-favicon.js # Favicon optimization script
-├── public/          # Static assets
-│   ├── images/      # Image assets
-│   │   ├── Favicon.jpg       # Source favicon image
-│   │   ├── favicon.ico       # Generated favicon (32x32)
-│   │   ├── favicon-16x16.png # Generated small favicon
-│   │   ├── favicon-32x32.png # Generated large favicon
-│   │   └── apple-touch-icon.png # Generated Apple icon
-│   └── site.webmanifest    # Generated PWA manifest
-├── lib/             # Utility functions and shared logic
-│   └── utils.ts     # Utility functions
-├── styles/          # Global styles
-│   └── globals.css  # Global CSS
-├── types/           # TypeScript type definitions
-├── .next/           # Next.js build output (gitignored)
-├── node_modules/    # Frontend dependencies (gitignored)
-├── package.json     # Frontend dependencies and scripts
-├── tailwind.config.ts    # Tailwind CSS configuration
-├── tsconfig.json    # TypeScript configuration
-├── next.config.ts   # Next.js configuration
-└── postcss.config.mjs    # PostCSS configuration
+├── app/
+│   ├── layout.tsx              # Root layout with sidebar and footer
+│   ├── page.tsx               # Homepage with tool grid
+│   ├── globals.css            # Global styles
+│   └── image-compressor/      # Image compression tool
+│       └── page.tsx           # Image compressor component
+├── components/
+│   ├── layout/
+│   │   ├── sidebar.tsx        # Navigation sidebar
+│   │   └── footer.tsx         # Global footer component
+│   └── ui/                    # Reusable UI components
+├── config/
+│   └── routes.ts              # Route configurations and tool definitions
+└── lib/
+    └── utils.ts               # Utility functions
 ```
 
 ## Backend Structure
