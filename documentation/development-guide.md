@@ -30,11 +30,32 @@ The backend should:
 The image resizer tool provides the following capabilities:
 - Resize any image format while maintaining aspect ratio
 - Special handling for SVG files allowing upscaling up to 2x
-- Downscaling support for all other image formats
+- Downscaling support for all other image formats (25% to 100%)
 - Quality preservation with format-specific optimizations
 - Real-time preview of resized dimensions
+- Real-time file size estimation based on:
+  - Image format (PNG, JPG, SVG, etc.)
+  - Scale percentage
+  - Original file size
+- Drag and drop file upload support
 - Client-side processing using Canvas API
+- Format-specific quality settings:
+  - SVG: Lossless quality (1.0)
+  - Other formats: Optimized quality (0.8)
 - Accessible through `/image-resizer` route
+
+#### Supported File Types
+- PNG: Lossless compression, downscale only
+- JPG/JPEG: Lossy compression, downscale only
+- WebP: Modern format, downscale only
+- AVIF: Next-gen format, downscale only
+- SVG: Vector format, supports upscaling to 200%
+
+#### Size Limitations
+- Minimum scale: 25% of original dimensions
+- Maximum scale: 
+  - SVG: Up to 200% of original dimensions
+  - Other formats: Up to 100% of original dimensions
 
 ## Initial Setup
 
@@ -80,6 +101,7 @@ npm run dev
 - TypeScript
 - Tailwind CSS
 - shadcn/ui components
+- @radix-ui/react-slider: For image resize controls
 - File conversion libraries (to be added based on format requirements)
 
 ### Backend Dependencies
