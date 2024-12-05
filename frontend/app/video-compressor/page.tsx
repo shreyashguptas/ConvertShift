@@ -21,8 +21,6 @@ const VIDEO_RESOLUTIONS = {
   '144p': { width: 256, height: 144, label: '144p (256x144)' },
 };
 
-const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
-
 export default function VideoCompressor() {
   const [video, setVideo] = useState<File | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -44,8 +42,8 @@ export default function VideoCompressor() {
     const load = async () => {
       try {
         await ffmpeg.load({
-          coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-          wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+          coreURL: '/ffmpeg-core.js',
+          wasmURL: '/ffmpeg-core.wasm',
         });
         setLoaded(true);
       } catch (error) {
