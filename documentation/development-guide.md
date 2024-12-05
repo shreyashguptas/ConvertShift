@@ -24,6 +24,18 @@ The backend should:
 - Provide lightweight API endpoints
 - Focus on session management and configuration
 
+## Features
+
+### Image Resizer
+The image resizer tool provides the following capabilities:
+- Resize any image format while maintaining aspect ratio
+- Special handling for SVG files allowing upscaling up to 2x
+- Downscaling support for all other image formats
+- Quality preservation with format-specific optimizations
+- Real-time preview of resized dimensions
+- Client-side processing using Canvas API
+- Accessible through `/image-resizer` route
+
 ## Initial Setup
 
 ### Clone the Repository
