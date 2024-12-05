@@ -63,7 +63,7 @@ npm run dev
 ## Installed Dependencies
 
 ### Frontend Dependencies
-- Next.js 14
+- Next.js v15.0.3
 - React
 - TypeScript
 - Tailwind CSS
