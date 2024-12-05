@@ -4,123 +4,98 @@
 ```
 file-converter/
 ├── frontend/           # Next.js frontend application
-├── backend/           # Express.js backend server
+├── backend/           # Express backend server
 ├── documentation/     # Project documentation
-└── .gitignore        # Git ignore configuration
+├── package.json      # Root package configuration
+├── vercel.json       # Vercel deployment configuration
+└── .gitignore        # Git ignore rules
 ```
 
 ## Frontend Structure
 ```
 frontend/
-├── app/
-│   ├── layout.tsx              # Root layout with sidebar and footer
-│   ├── page.tsx               # Homepage with tool grid
-│   ├── globals.css            # Global styles
-│   └── image-compressor/      # Image compression tool
-│       └── page.tsx           # Image compressor component
-├── components/
-│   ├── layout/
-│   │   ├── sidebar.tsx        # Navigation sidebar
-│   │   └── footer.tsx         # Global footer component
-│   └── ui/                    # Reusable UI components
-├── config/
-│   └── routes.ts              # Route configurations and tool definitions
-└── lib/
-    └── utils.ts               # Utility functions
+├── app/                    # Next.js app directory (pages and routing)
+│   ├── page.tsx           # Homepage
+│   ├── layout.tsx         # Root layout
+│   ├── globals.css        # Global styles
+│   ├── image-resizer/     # Image resizer feature
+│   ├── video-compressor/  # Video compressor feature
+│   └── video-converter/   # Video converter feature
+├── components/            # Reusable React components
+│   ├── ui/               # UI components from shadcn
+│   └── shared/           # Shared components across features
+├── config/               # Configuration files
+├── lib/                  # Utility functions and shared logic
+├── public/              # Static assets
+├── scripts/             # Build and setup scripts
+├── next.config.js       # Next.js configuration
+├── tailwind.config.js   # Tailwind CSS configuration
+├── tsconfig.json        # TypeScript configuration
+└── package.json         # Frontend dependencies
 ```
 
-## Backend Structure
+## Feature Organization
+Each feature in the `app` directory follows this structure:
 ```
-backend/
-├── index.js         # Main server entry point
-├── node_modules/    # Backend dependencies (gitignored)
-└── package.json     # Backend dependencies and scripts
+feature-name/
+├── page.tsx           # Main feature page component
+├── components/        # Feature-specific components
+└── utils/            # Feature-specific utilities
 ```
 
 ## Documentation Structure
 ```
 documentation/
-├── project-overview.md    # Project goals, features, and tech stack
-├── development-guide.md   # Development setup and guidelines
-└── project-structure.md   # Folder structure documentation
+├── development-guide.md     # Development setup and guidelines
+├── project-structure.md     # This file
+└── api-documentation.md     # API endpoints documentation
 ```
 
 ## Component Organization
 
 ### UI Components
-- **Button**: Reusable button component with variants
-- **Input**: Form input component with validation
-- **Label**: Form label component
-- **Select**: Dropdown component with custom styling
+Located in `frontend/components/ui/`:
+- Button
+- Card
+- Dialog
+- Dropdown
+- Input
+- Progress
+- Select
+- Slider
+- Toast
 
-### Layout Components
-- **Sidebar**: Main navigation component
-  - Logo/Title
-  - Navigation links
-  - Tool selection
+### Shared Components
+Located in `frontend/components/shared/`:
+- FileDropzone
+- FormatSelector
+- ProgressBar
+- ErrorDisplay
+- Navigation
 
-### Page Components
-- **Home**: Welcome page with project information
-- **Image Compressor**: Image compression tool
-  - File upload interface
-  - Size control inputs
-  - Compression results display
-  - Download functionality
+## Routing Structure
+The application uses Next.js App Router with the following routes:
 
-## Scripts
-- **optimize-favicon.js**: Favicon generation script
-  - Generates multiple favicon sizes
-  - Optimizes images for web
-  - Creates PWA manifest
-  - Supports multiple devices
-
-## Key Configuration Files
-- `.gitignore`: Specifies which files Git should ignore
-- `frontend/package.json`: Frontend dependencies and scripts
-  - browser-image-compression
-  - lucide-react for icons
-  - shadcn/ui components
-  - sharp for image optimization
-  - Other development dependencies
-- `backend/package.json`: Backend dependencies and scripts
-- `frontend/tsconfig.json`: TypeScript configuration
-- `frontend/tailwind.config.ts`: Tailwind CSS configuration
-- `frontend/next.config.ts`: Next.js configuration
-
-## Environment Files (not in repository)
 ```
-frontend/.env.local  # Frontend environment variables
-backend/.env         # Backend environment variables
+/                           # Homepage
+├── /image-resizer         # Image resizer tool
+├── /video-compressor     # Video compression tool
+└── /video-converter      # Video format converter
 ```
 
-## Styling Organization
-- Tailwind CSS for utility classes
-- Component-specific styles
-- Global styles in globals.css
-- shadcn/ui component theming
+## Configuration Files
+```
+frontend/
+├── next.config.js         # Next.js configuration
+├── tailwind.config.js     # Tailwind CSS settings
+├── postcss.config.js      # PostCSS configuration
+├── tsconfig.json          # TypeScript configuration
+└── components.json        # shadcn/ui configuration
+```
 
-## Type Definitions
-- Component props
-- API responses
-- Utility functions
-- Configuration objects
-
-## Asset Organization
-- Icons and images in public directory
-  - Source favicon image
-  - Generated favicon variants
-  - PWA manifest
-- Component-specific assets
-- Shared utility functions in lib
-- Type definitions in types
-
-## Favicon Generation
-The project includes an automated favicon generation system:
-1. Place source image (`Favicon.jpg`) in `public/images/`
-2. Run `pnpm run optimize-favicon`
-3. Generated files:
-   - favicon.ico (32x32)
-   - favicon-16x16.png
-   - favicon-32x32.png
-   - apple-touch-icon.png (180x180)
-   - site.webmanifest
+## Build and Deployment
+```
+frontend/
+├── scripts/              # Build and setup scripts
+└── vercel.json          # Vercel deployment settings
+```

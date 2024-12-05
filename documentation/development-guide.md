@@ -26,86 +26,209 @@ The backend should:
 
 ## Features
 
-### Image Resizer
-The image resizer tool provides the following capabilities:
-- Resize any image format while maintaining aspect ratio
-- Special handling for SVG files allowing upscaling up to 2x
-- Downscaling support for all other image formats (25% to 100%)
-- Quality preservation with format-specific optimizations
-- Real-time preview of resized dimensions
-- Real-time file size estimation based on:
-  - Image format (PNG, JPG, SVG, etc.)
-  - Scale percentage
-  - Original file size
-- Drag and drop file upload support
-- Client-side processing using Canvas API
-- Format-specific quality settings:
-  - SVG: Lossless quality (1.0)
-  - Other formats: Optimized quality (0.8)
-- Accessible through `/image-resizer` route
+### Video Processing Features
 
-#### Supported File Types
-- PNG: Lossless compression, downscale only
-- JPG/JPEG: Lossy compression, downscale only
-- WebP: Modern format, downscale only
-- AVIF: Next-gen format, downscale only
-- SVG: Vector format, supports upscaling to 200%
+#### FFmpeg Integration
+We use FFmpeg.wasm for client-side video processing. The implementation follows these key principles:
 
-#### Size Limitations
-- Minimum scale: 25% of original dimensions
-- Maximum scale: 
-  - SVG: Up to 200% of original dimensions
-  - Other formats: Up to 100% of original dimensions
+1. **FFmpeg Provider Setup**
+```typescript
+// FFmpeg Provider Context
+interface FFmpegContextType {
+  ffmpeg: FFmpeg | null;
+  loaded: boolean;
+  fetchFile: typeof fetchFile;
+}
 
-### Video Compressor
-The video compressor tool provides professional-grade video compression capabilities:
+// Core FFmpeg loading
+const loadFFmpeg = async () => {
+  const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+  const instance = new FFmpeg();
+  await instance.load({
+    coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+    wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+    workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, 'text/javascript')
+  });
+};
+```
 
-#### Core Features
-- Client-side video processing using FFmpeg WebAssembly
-- Adaptive resolution control based on input video
-- Real-time file size estimation
-- Quality-preserving compression
-- Progress tracking during compression
-- Drag and drop file upload support
-- Accessible through `/video-compressor` route
+2. **Format Handling**
+```typescript
+// Format configuration structure
+const FORMAT_CONFIG = {
+  extension: string;
+  mimeType: string;
+  codec: string;
+  compatibleFrom: string[];
+  settings: {
+    preset?: string;
+    crf?: string;
+    profile?: string;
+    // Other format-specific settings
+  };
+};
+```
 
-#### Video Processing
-- Resolution Control:
-  - Automatic resolution detection
-  - Smart resolution dropdown (only shows available downsizing options)
-  - Supports from 8K down to 144p
-  - Maintains aspect ratio during scaling
-- Compression Settings:
-  - Variable compression level (1-100%)
-  - CRF (Constant Rate Factor) based encoding
-  - Optimized audio compression (AAC codec)
-  - Configurable video codec settings (H.264)
+3. **Conversion Process**
+```typescript
+// Basic conversion flow
+const convertVideo = async () => {
+  await ffmpeg.writeFile('input.mp4', videoData);
+  await ffmpeg.exec([
+    '-i', 'input.mp4',
+    '-c:v', codec,
+    // Format-specific settings
+    'output.ext'
+  ]);
+  const data = await ffmpeg.readFile('output.ext');
+};
+```
 
-#### Supported Formats
-Input Formats:
-- MP4 (H.264, H.265)
-- MOV (QuickTime)
-- AVI (Audio Video Interleave)
-- MKV (Matroska)
-- WebM (VP8/VP9)
+#### Video Compressor
+The video compressor feature provides:
+- Resolution control (8K to 144p)
+- Quality-based compression using CRF
+- Format-specific optimizations
+- Real-time preview
+- Progress tracking
 
-Output Format:
-- MP4 (H.264) with AAC audio
+Implementation details:
+```typescript
+// Resolution configuration
+const VIDEO_RESOLUTIONS = {
+  '8K': { width: 7680, height: 4320 },
+  '4K': { width: 3840, height: 2160 },
+  // ... other resolutions
+};
 
-#### Technical Implementation
-- Uses FFmpeg.wasm for video processing
-- Implements cross-origin isolation for WebAssembly
-- Handles large file processing in-browser
-- Memory-efficient chunked processing
-- Automatic cleanup of temporary files
+// FFmpeg compression command
+const args = [
+  '-i', 'input.mp4',
+  '-c:v', 'libx264',
+  '-crf', crf.toString(),
+  '-preset', 'medium',
+  '-vf', `scale=${width}:${height}`,
+  '-c:a', 'aac',
+  '-b:a', '128k',
+  'output.mp4'
+];
+```
 
-#### Quality Settings
-- Video Codec: H.264 (libx264)
-- Audio Codec: AAC (128k bitrate)
-- Compression Presets:
-  - CRF Range: 0-51 (mapped from quality slider)
-  - Encoding Preset: medium (balance of speed/quality)
-  - Smart bitrate allocation
+#### Video Converter
+The video converter supports multiple formats with specific optimizations:
+
+1. **Supported Formats**:
+   - MP4 (H.264/H.265)
+   - WebM (VP9)
+   - MOV (QuickTime)
+   - ProRes
+   - DNxHD
+
+2. **Format-Specific Settings**:
+```typescript
+// H.264/H.265 settings
+{
+  codec: 'libx264',
+  settings: {
+    preset: 'medium',
+    crf: '23'
+  }
+}
+
+// ProRes settings
+{
+  codec: 'prores_ks',
+  settings: {
+    profile: '3',  // ProRes 422 HQ
+    vendor: 'apl0',
+    bits_per_mb: '8000'
+  }
+}
+```
+
+3. **Format Compatibility**:
+```typescript
+const compatibilityMap = {
+  'mov': ['mp4', 'mov', 'prores'],
+  'mp4': ['mp4', 'webm', 'mov'],
+  // ... other mappings
+};
+```
+
+### Security Considerations
+
+#### CORS and SharedArrayBuffer
+FFmpeg.wasm requires specific headers for SharedArrayBuffer support:
+```javascript
+// next.config.js
+{
+  headers: [
+    {
+      key: "Cross-Origin-Opener-Policy",
+      value: "same-origin"
+    },
+    {
+      key: "Cross-Origin-Embedder-Policy",
+      value: "require-corp"
+    }
+  ]
+}
+```
+
+#### Error Handling
+Implement proper error handling for:
+- Format incompatibility
+- Memory limitations
+- Codec support
+- File size limits
+
+### Best Practices for Video Processing
+
+1. **Memory Management**:
+   - Clean up resources after processing
+   - Use URL.revokeObjectURL for previews
+   - Delete temporary FFmpeg files
+
+2. **User Experience**:
+   - Show progress indicators
+   - Provide format compatibility info
+   - Display helpful error messages
+   - Add preview capabilities
+
+3. **Performance**:
+   - Use appropriate codec presets
+   - Optimize for quality vs speed
+   - Handle large files efficiently
+
+4. **Code Organization**:
+   - Separate format configurations
+   - Modular codec settings
+   - Reusable FFmpeg commands
+
+### Adding New Video Features
+When adding new video processing features:
+
+1. **FFmpeg Integration**:
+   - Use the FFmpegProvider context
+   - Follow the established format structure
+   - Add proper type definitions
+
+2. **Format Support**:
+   - Define compatibility rules
+   - Add codec-specific settings
+   - Document format limitations
+
+3. **UI Implementation**:
+   - Follow existing design patterns
+   - Add proper loading states
+   - Implement error handling
+   - Add progress indicators
+
+4. **Testing**:
+   - Test format compatibility
+   - Verify codec support
+   - Check error scenarios
+   - Validate output quality
 
 ## Initial Setup
 
@@ -155,7 +278,7 @@ npm run dev
 - @ffmpeg/core: FFmpeg core functionality
 - @ffmpeg/util: FFmpeg utility functions
 - @radix-ui/react-slider: For compression controls
-- @radix-ui/react-select: For resolution selection
+- @radix-ui/react-select: For format selection
 
 ### Backend Dependencies
 - express: Web framework
