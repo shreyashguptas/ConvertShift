@@ -11,14 +11,15 @@ export const routes = [
     icon: '📐',
     description: 'Resize images to your desired dimensions while maintaining quality'
   },
+  {
+    label: 'Video Compressor',
+    href: '/video-compressor',
+    icon: '🎥',
+    description: 'Compress videos with custom quality and resolution settings'
+  },
 ] as const
 
 export const comingSoonTools = [
-  { 
-    icon: '🎥', 
-    label: 'Video Compressor',
-    description: 'Reduce video file size without losing quality'
-  },
   { 
     icon: '🎵', 
     label: 'Video Converter',
