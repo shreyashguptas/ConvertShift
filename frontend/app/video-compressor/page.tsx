@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { fetchFile } from '@ffmpeg/util';
+import dynamic from 'next/dynamic';
 
 /**
  * Standard video resolutions with their dimensions and labels.
@@ -24,17 +23,23 @@ const VIDEO_RESOLUTIONS = {
   '144p': { width: 256, height: 144, label: '144p (256x144)' },
 } as const;
 
+// Dynamically import FFmpeg with no SSR
+const FFmpeg = dynamic(() => import('@ffmpeg/ffmpeg').then(mod => mod.FFmpeg), {
+  ssr: false,
+});
+
+// Dynamically import FFmpeg utilities with no SSR
+const FFmpegUtil = dynamic(() => 
+  import('@ffmpeg/util').then(mod => ({
+    fetchFile: mod.fetchFile,
+  })),
+  { ssr: false }
+);
+
 /**
  * VideoCompressor Component
  * 
  * A client-side video compression tool that uses FFmpeg WebAssembly for processing.
- * Features:
- * - Drag and drop file upload
- * - Resolution control with smart downsizing options
- * - Quality-based compression using CRF
- * - Real-time file size estimation
- * - Progress tracking
- * - Client-side processing
  */
 export default function VideoCompressor() {
   // File and video state
@@ -55,29 +60,40 @@ export default function VideoCompressor() {
   const [estimatedSize, setEstimatedSize] = useState<string>('');
   
   // FFmpeg state and refs
-  const [ffmpeg] = useState(() => new FFmpeg());
+  const [ffmpeg, setFFmpeg] = useState<any>(null);
   const [loaded, setLoaded] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  /**
-   * Initialize FFmpeg when component mounts
-   * Loads the WebAssembly core and required dependencies
-   */
   useEffect(() => {
-    const load = async () => {
+    let mounted = true;
+
+    const loadFFmpeg = async () => {
       try {
-        await ffmpeg.load({
+        const FFmpegInstance = await FFmpeg;
+        const instance = new FFmpegInstance();
+        if (!mounted) return;
+
+        await instance.load({
           coreURL: '/ffmpeg-core.js',
           wasmURL: '/ffmpeg-core.wasm',
         });
-        setLoaded(true);
+
+        if (mounted) {
+          setFFmpeg(instance);
+          setLoaded(true);
+        }
       } catch (error) {
         console.error('Error loading FFmpeg:', error);
       }
     };
-    load();
-  }, [ffmpeg]);
+
+    loadFFmpeg();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   /**
    * Formats bytes into human-readable sizes
@@ -221,19 +237,20 @@ export default function VideoCompressor() {
    * Processes the video with the selected resolution and compression settings
    */
   const compressVideo = async () => {
-    if (!video || !loaded) return;
+    if (!video || !loaded || !ffmpeg) return;
 
     setProcessing(true);
     setProgress(0);
 
     try {
-      const videoData = await fetchFile(video);
+      const utils = await FFmpegUtil;
+      const videoData = await utils.fetchFile(video);
+      
       await ffmpeg.writeFile('input.mp4', videoData);
 
       const targetRes = VIDEO_RESOLUTIONS[targetResolution as keyof typeof VIDEO_RESOLUTIONS];
       const crf = Math.round(51 * (compressionLevel / 100));
       
-      // FFmpeg command for high-quality compression
       const args = [
         '-i', 'input.mp4',
         '-c:v', 'libx264',    // H.264 codec
@@ -247,7 +264,6 @@ export default function VideoCompressor() {
 
       await ffmpeg.exec(args);
 
-      // Process and download the result
       const outputData = await ffmpeg.readFile('output.mp4');
       const blob = new Blob([outputData], { type: 'video/mp4' });
       const url = URL.createObjectURL(blob);
@@ -256,7 +272,6 @@ export default function VideoCompressor() {
       link.download = `compressed-${fileName}`;
       link.click();
 
-      // Cleanup
       URL.revokeObjectURL(url);
       await ffmpeg.deleteFile('input.mp4');
       await ffmpeg.deleteFile('output.mp4');
