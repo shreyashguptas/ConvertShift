@@ -17,14 +17,15 @@ export const routes = [
     icon: '🎥',
     description: 'Compress videos with custom quality and resolution settings'
   },
+  {
+    label: 'Video Converter',
+    href: '/video-converter',
+    icon: '🎬',
+    description: 'Convert videos between formats while maintaining original quality'
+  },
 ] as const
 
 export const comingSoonTools = [
-  { 
-    icon: '🎵', 
-    label: 'Video Converter',
-    description: 'Convert videos between popular formats'
-  },
   { 
     icon: '📊', 
     label: 'Document Converter',

@@ -131,34 +131,49 @@ function VideoCompressorContent() {
   };
 
   const compressVideo = async () => {
-    if (!video || !loaded || !ffmpeg) return;
+    if (!video || !loaded || !ffmpeg || !targetResolution) {
+      console.error('Missing required data:', { video, loaded, targetResolution });
+      alert('Please select a video and target resolution before compressing.');
+      return;
+    }
 
     setProcessing(true);
     setProgress(0);
 
     try {
+      console.log('Starting compression...');
       const videoData = await fetchFile(video);
+      
+      console.log('Writing input file...');
       await ffmpeg.writeFile('input.mp4', videoData);
 
       const targetRes = VIDEO_RESOLUTIONS[targetResolution as keyof typeof VIDEO_RESOLUTIONS];
+      if (!targetRes) {
+        throw new Error('Invalid target resolution selected');
+      }
+
       const crf = Math.round(51 * (compressionLevel / 100));
       
+      console.log('Running FFmpeg command with resolution:', targetRes);
       const args = [
         '-i', 'input.mp4',
-        '-c:v', 'libx264',    // H.264 codec
-        '-crf', crf.toString(), // Quality control
-        '-preset', 'medium',    // Encoding speed/quality balance
-        '-vf', `scale=${targetRes.width}:${targetRes.height}`, // Resolution
-        '-c:a', 'aac',         // Audio codec
-        '-b:a', '128k',        // Audio bitrate
+        '-c:v', 'libx264',
+        '-crf', crf.toString(),
+        '-preset', 'medium',
+        '-vf', `scale=${targetRes.width}:${targetRes.height}`,
+        '-c:a', 'aac',
+        '-b:a', '128k',
         'output.mp4'
       ];
 
       await ffmpeg.exec(args);
 
+      console.log('Reading output file...');
       const outputData = await ffmpeg.readFile('output.mp4');
       const blob = new Blob([outputData], { type: 'video/mp4' });
       const url = URL.createObjectURL(blob);
+      
+      console.log('Creating download link...');
       const link = document.createElement('a');
       link.href = url;
       link.download = `compressed-${fileName}`;
@@ -167,9 +182,12 @@ function VideoCompressorContent() {
       URL.revokeObjectURL(url);
       await ffmpeg.deleteFile('input.mp4');
       await ffmpeg.deleteFile('output.mp4');
+      
+      console.log('Compression completed successfully');
     } catch (error) {
       console.error('Error during compression:', error);
-      alert('An error occurred during compression. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+      alert(`Compression failed: ${errorMessage}. Please try again.`);
     } finally {
       setProcessing(false);
       setProgress(100);

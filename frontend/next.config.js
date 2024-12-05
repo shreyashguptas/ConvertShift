@@ -13,34 +13,24 @@ const nextConfig = {
             key: "Cross-Origin-Embedder-Policy",
             value: "require-corp",
           },
-        ],
-      },
-      {
-        source: "/ffmpeg-core.js",
-        headers: [
-          {
-            key: "Cross-Origin-Embedder-Policy",
-            value: "require-corp",
-          },
           {
             key: "Cross-Origin-Resource-Policy",
             value: "cross-origin",
           },
-        ],
-      },
-      {
-        source: "/ffmpeg-core.wasm",
-        headers: [
           {
-            key: "Cross-Origin-Embedder-Policy",
-            value: "require-corp",
+            key: "Access-Control-Allow-Origin",
+            value: "*",
           },
           {
-            key: "Cross-Origin-Resource-Policy",
-            value: "cross-origin",
+            key: "Access-Control-Allow-Methods",
+            value: "GET, OPTIONS",
           },
+          {
+            key: "Access-Control-Allow-Headers",
+            value: "*",
+          }
         ],
-      },
+      }
     ];
   },
   webpack: (config) => {
