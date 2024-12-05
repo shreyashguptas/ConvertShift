@@ -1,6 +1,6 @@
 'use client'
 
-import { Github } from 'lucide-react'
+import { Github, Heart } from 'lucide-react'
 import Link from 'next/link'
 
 export function Footer() {
@@ -14,6 +14,14 @@ export function Footer() {
         </div>
         <div className="flex items-center gap-4">
           <span>Built by Shreyash Gupta</span>
+          <Link 
+            href="https://ko-fi.com/shreyashgupta" 
+            target="_blank"
+            className="flex items-center gap-1 hover:text-gray-900 transition-colors"
+          >
+            <Heart className="h-4 w-4 text-red-500" />
+            <span>Support</span>
+          </Link>
           <Link 
             href="https://github.com/shreyashgupta/file-converter" 
             target="_blank"
