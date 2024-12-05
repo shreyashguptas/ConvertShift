@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useRef, useEffect, ChangeEvent } from 'react';
+import { useState, useRef, ChangeEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import dynamic from 'next/dynamic';
+import { FFmpegProvider, useFFmpeg } from '@/components/ffmpeg-provider';
 
 /**
  * Standard video resolutions with their dimensions and labels.
@@ -23,25 +23,9 @@ const VIDEO_RESOLUTIONS = {
   '144p': { width: 256, height: 144, label: '144p (256x144)' },
 } as const;
 
-// Dynamically import FFmpeg with no SSR
-const FFmpeg = dynamic(() => import('@ffmpeg/ffmpeg').then(mod => mod.FFmpeg), {
-  ssr: false,
-});
-
-// Dynamically import FFmpeg utilities with no SSR
-const FFmpegUtil = dynamic(() => 
-  import('@ffmpeg/util').then(mod => ({
-    fetchFile: mod.fetchFile,
-  })),
-  { ssr: false }
-);
-
-/**
- * VideoCompressor Component
- * 
- * A client-side video compression tool that uses FFmpeg WebAssembly for processing.
- */
-export default function VideoCompressor() {
+function VideoCompressorContent() {
+  const { ffmpeg, loaded, fetchFile } = useFFmpeg();
+  
   // File and video state
   const [video, setVideo] = useState<File | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -59,47 +43,11 @@ export default function VideoCompressor() {
   const [compressionLevel, setCompressionLevel] = useState(50);
   const [estimatedSize, setEstimatedSize] = useState<string>('');
   
-  // FFmpeg state and refs
-  const [ffmpeg, setFFmpeg] = useState<any>(null);
-  const [loaded, setLoaded] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  useEffect(() => {
-    let mounted = true;
-
-    const loadFFmpeg = async () => {
-      try {
-        const FFmpegInstance = await FFmpeg;
-        const instance = new FFmpegInstance();
-        if (!mounted) return;
-
-        await instance.load({
-          coreURL: '/ffmpeg-core.js',
-          wasmURL: '/ffmpeg-core.wasm',
-        });
-
-        if (mounted) {
-          setFFmpeg(instance);
-          setLoaded(true);
-        }
-      } catch (error) {
-        console.error('Error loading FFmpeg:', error);
-      }
-    };
-
-    loadFFmpeg();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
   /**
    * Formats bytes into human-readable sizes
-   * @param bytes - The number of bytes to format
-   * @param decimals - Number of decimal places to show
-   * @returns Formatted string (e.g., "1.5 MB")
    */
   const formatBytes = (bytes: number, decimals = 2) => {
     if (bytes === 0) return '0 Bytes';
@@ -112,8 +60,6 @@ export default function VideoCompressor() {
 
   /**
    * Detects the resolution of a video file
-   * @param file - The video file to analyze
-   * @returns Promise resolving to the resolution key or custom resolution string
    */
   const detectResolution = async (file: File): Promise<string> => {
     return new Promise((resolve) => {
@@ -134,11 +80,6 @@ export default function VideoCompressor() {
     });
   };
 
-  /**
-   * Gets available resolutions for downscaling based on current resolution
-   * @param currentResolution - The current video resolution
-   * @returns Array of available resolution options
-   */
   const getAvailableResolutions = (currentResolution: string) => {
     const resolutionKeys = Object.keys(VIDEO_RESOLUTIONS);
     const currentIndex = resolutionKeys.indexOf(currentResolution);
@@ -180,9 +121,6 @@ export default function VideoCompressor() {
     const availableRes = getAvailableResolutions(resolution);
     setAvailableResolutions(availableRes);
     setTargetResolution(resolution);
-
-    // Estimate initial compressed size
-    updateEstimatedSize(file.size, resolution, resolution, 50);
   };
 
   const handleVideoUpload = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -192,50 +130,6 @@ export default function VideoCompressor() {
     }
   };
 
-  const updateEstimatedSize = (originalSize: number, originalRes: string, targetRes: string, compression: number) => {
-    const originalResObj = VIDEO_RESOLUTIONS[originalRes as keyof typeof VIDEO_RESOLUTIONS];
-    const targetResObj = VIDEO_RESOLUTIONS[targetRes as keyof typeof VIDEO_RESOLUTIONS];
-    
-    if (!originalResObj || !targetResObj) return;
-
-    const resolutionRatio = (targetResObj.width * targetResObj.height) / 
-                           (originalResObj.width * originalResObj.height);
-    
-    const compressionRatio = (100 - compression) / 100;
-    const estimatedBytes = originalSize * resolutionRatio * compressionRatio;
-    
-    setEstimatedSize(formatBytes(estimatedBytes));
-  };
-
-  const handleCompressionChange = (value: number[]) => {
-    const level = value[0];
-    setCompressionLevel(level);
-    if (video) {
-      updateEstimatedSize(
-        video.size,
-        originalResolution,
-        targetResolution,
-        level
-      );
-    }
-  };
-
-  const handleResolutionChange = (value: string) => {
-    setTargetResolution(value);
-    if (video) {
-      updateEstimatedSize(
-        video.size,
-        originalResolution,
-        value,
-        compressionLevel
-      );
-    }
-  };
-
-  /**
-   * Handles video compression using FFmpeg
-   * Processes the video with the selected resolution and compression settings
-   */
   const compressVideo = async () => {
     if (!video || !loaded || !ffmpeg) return;
 
@@ -243,9 +137,7 @@ export default function VideoCompressor() {
     setProgress(0);
 
     try {
-      const utils = await FFmpegUtil;
-      const videoData = await utils.fetchFile(video);
-      
+      const videoData = await fetchFile(video);
       await ffmpeg.writeFile('input.mp4', videoData);
 
       const targetRes = VIDEO_RESOLUTIONS[targetResolution as keyof typeof VIDEO_RESOLUTIONS];
@@ -368,7 +260,7 @@ export default function VideoCompressor() {
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Target Resolution</Label>
-                    <Select value={targetResolution} onValueChange={handleResolutionChange}>
+                    <Select value={targetResolution} onValueChange={setTargetResolution}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select resolution" />
                       </SelectTrigger>
@@ -394,7 +286,7 @@ export default function VideoCompressor() {
                       max={100}
                       step={1}
                       value={[compressionLevel]}
-                      onValueChange={handleCompressionChange}
+                      onValueChange={(value) => setCompressionLevel(value[0])}
                       className="w-full"
                     />
                     <div className="flex justify-between text-xs text-gray-500">
@@ -439,5 +331,13 @@ export default function VideoCompressor() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function VideoCompressorPage() {
+  return (
+    <FFmpegProvider>
+      <VideoCompressorContent />
+    </FFmpegProvider>
   );
 } 
