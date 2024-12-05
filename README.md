@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ConvertShift
 
-## Getting Started
+ConvertShift is a privacy-focused file conversion platform that lets you transform files right in your browser - no uploads, no servers, just seamless local processing.
 
-First, run the development server:
+## Why ConvertShift?
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Have you ever needed to:
+- Compress a profile picture to meet GitHub's 1MB limit?
+- Convert an iPhone video to MP4 for sharing?
+- Resize images in bulk for your website?
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+I built ConvertShift because I was tired of bouncing between sketchy file conversion websites, never knowing where my files were being uploaded or what was happening to them. I figured others probably face these same frustrations too.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Key Features
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Image Compression** - Compress images to a target size while maintaining quality
+- **Multiple Format Support** - Handle PNG, JPG, JPEG, WebP, AVIF, SVG and more
+- **Batch Processing** - Convert up to 1000 files at once
+- **Complete Privacy** - All processing happens locally in your browser
+- **No Limitations** - No file size limits, no ads, no signups
 
-## Learn More
+## Coming Soon
 
-To learn more about Next.js, take a look at the following resources:
+- Image Resizer
+- Video Compressor 
+- Video Format Converter
+- Document Converter
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Privacy First
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Your files never leave your device. ConvertShift processes everything locally in your browser - no server uploads, no data collection, no compromises on privacy.
 
-## Deploy on Vercel
+## Get Started
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Visit [ConvertShift](https://convertshift.com) to start converting files privately and efficiently.
