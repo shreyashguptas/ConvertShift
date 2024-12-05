@@ -6,9 +6,12 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { fetchFile, toBlobURL } from '@ffmpeg/util';
+import { fetchFile } from '@ffmpeg/util';
 
-// Standard video resolutions
+/**
+ * Standard video resolutions with their dimensions and labels.
+ * Ordered from highest to lowest resolution for proper filtering.
+ */
 const VIDEO_RESOLUTIONS = {
   '8K': { width: 7680, height: 4320, label: '8K (7680x4320)' },
   '4K': { width: 3840, height: 2160, label: '4K (3840x2160)' },
@@ -19,25 +22,48 @@ const VIDEO_RESOLUTIONS = {
   '360p': { width: 640, height: 360, label: '360p (640x360)' },
   '240p': { width: 426, height: 240, label: '240p (426x240)' },
   '144p': { width: 256, height: 144, label: '144p (256x144)' },
-};
+} as const;
 
+/**
+ * VideoCompressor Component
+ * 
+ * A client-side video compression tool that uses FFmpeg WebAssembly for processing.
+ * Features:
+ * - Drag and drop file upload
+ * - Resolution control with smart downsizing options
+ * - Quality-based compression using CRF
+ * - Real-time file size estimation
+ * - Progress tracking
+ * - Client-side processing
+ */
 export default function VideoCompressor() {
+  // File and video state
   const [video, setVideo] = useState<File | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string>('');
   const [fileSize, setFileSize] = useState<string>('');
+  
+  // Processing state
   const [processing, setProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
+  
+  // Resolution and compression state
   const [originalResolution, setOriginalResolution] = useState<string>('');
   const [targetResolution, setTargetResolution] = useState<string>('');
   const [availableResolutions, setAvailableResolutions] = useState<string[]>([]);
   const [compressionLevel, setCompressionLevel] = useState(50);
   const [estimatedSize, setEstimatedSize] = useState<string>('');
+  
+  // FFmpeg state and refs
   const [ffmpeg] = useState(() => new FFmpeg());
   const [loaded, setLoaded] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  /**
+   * Initialize FFmpeg when component mounts
+   * Loads the WebAssembly core and required dependencies
+   */
   useEffect(() => {
     const load = async () => {
       try {
@@ -53,6 +79,12 @@ export default function VideoCompressor() {
     load();
   }, [ffmpeg]);
 
+  /**
+   * Formats bytes into human-readable sizes
+   * @param bytes - The number of bytes to format
+   * @param decimals - Number of decimal places to show
+   * @returns Formatted string (e.g., "1.5 MB")
+   */
   const formatBytes = (bytes: number, decimals = 2) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -62,6 +94,11 @@ export default function VideoCompressor() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
   };
 
+  /**
+   * Detects the resolution of a video file
+   * @param file - The video file to analyze
+   * @returns Promise resolving to the resolution key or custom resolution string
+   */
   const detectResolution = async (file: File): Promise<string> => {
     return new Promise((resolve) => {
       const video = document.createElement('video');
@@ -71,7 +108,6 @@ export default function VideoCompressor() {
         const width = video.videoWidth;
         const height = video.videoHeight;
         
-        // Find the closest standard resolution
         const resolutionEntry = Object.entries(VIDEO_RESOLUTIONS).find(([key, value]) => {
           return value.width === width && value.height === height;
         });
@@ -82,6 +118,11 @@ export default function VideoCompressor() {
     });
   };
 
+  /**
+   * Gets available resolutions for downscaling based on current resolution
+   * @param currentResolution - The current video resolution
+   * @returns Array of available resolution options
+   */
   const getAvailableResolutions = (currentResolution: string) => {
     const resolutionKeys = Object.keys(VIDEO_RESOLUTIONS);
     const currentIndex = resolutionKeys.indexOf(currentResolution);
@@ -175,6 +216,10 @@ export default function VideoCompressor() {
     }
   };
 
+  /**
+   * Handles video compression using FFmpeg
+   * Processes the video with the selected resolution and compression settings
+   */
   const compressVideo = async () => {
     if (!video || !loaded) return;
 
@@ -182,34 +227,28 @@ export default function VideoCompressor() {
     setProgress(0);
 
     try {
-      // Convert File to Uint8Array
       const videoData = await fetchFile(video);
-      
-      // Write the input video file to FFmpeg's virtual filesystem
       await ffmpeg.writeFile('input.mp4', videoData);
 
       const targetRes = VIDEO_RESOLUTIONS[targetResolution as keyof typeof VIDEO_RESOLUTIONS];
-      const crf = Math.round(51 * (compressionLevel / 100)); // Convert compression level to CRF (0-51)
+      const crf = Math.round(51 * (compressionLevel / 100));
       
-      // Prepare FFmpeg command
+      // FFmpeg command for high-quality compression
       const args = [
         '-i', 'input.mp4',
-        '-c:v', 'libx264',
-        '-crf', crf.toString(),
-        '-preset', 'medium',
-        '-vf', `scale=${targetRes.width}:${targetRes.height}`,
-        '-c:a', 'aac',
-        '-b:a', '128k',
+        '-c:v', 'libx264',    // H.264 codec
+        '-crf', crf.toString(), // Quality control
+        '-preset', 'medium',    // Encoding speed/quality balance
+        '-vf', `scale=${targetRes.width}:${targetRes.height}`, // Resolution
+        '-c:a', 'aac',         // Audio codec
+        '-b:a', '128k',        // Audio bitrate
         'output.mp4'
       ];
 
-      // Run FFmpeg command
       await ffmpeg.exec(args);
 
-      // Read the output file
+      // Process and download the result
       const outputData = await ffmpeg.readFile('output.mp4');
-      
-      // Create download link
       const blob = new Blob([outputData], { type: 'video/mp4' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
