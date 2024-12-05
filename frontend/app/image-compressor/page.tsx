@@ -77,11 +77,18 @@ export default function ImageCompressor() {
       return file
     }
 
+    // Calculate adaptive quality based on file size
+    const sizeInMB = file.size / (1024 * 1024)
+    const adaptiveQuality = sizeInMB > 5 ? 0.8 : 0.85 // Higher quality for smaller files
+
     const options = {
       maxSizeMB: targetSize / (1024 * 1024),
       useWebWorker: true,
       fileType: fileType,
-      initialQuality: 0.7,
+      initialQuality: adaptiveQuality,
+      maxWidthOrHeight: 4096, // Prevent excessive downsizing
+      alwaysKeepResolution: true, // Maintain original resolution when possible
+      preserveExif: true, // Keep image metadata
     }
 
     try {
