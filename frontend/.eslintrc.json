@@ -1,6 +1,6 @@
 {
-  "extends": ["next/core-web-vitals", "next/typescript"],
+  "extends": ["next", "next/core-web-vitals"],
   "rules": {
-    "@typescript-eslint/no-empty-interface": "off"
+    "@next/next/no-html-link-for-pages": "off"
   }
 }

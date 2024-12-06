@@ -6,27 +6,37 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FFmpegProvider, useFFmpeg } from '@/components/ffmpeg-provider';
 
-// Format configurations with compatibility and conversion settings
-const VIDEO_FORMATS = {
+interface VideoFormat {
+  label: string;
+  extension: string;
+  mimeType: string;
+  codec: string;
+  compatibleFrom: string[];
+  settings: {
+    preset: string;
+    crf: string;
+    extraArgs?: string[];
+  };
+}
+
+const VIDEO_FORMATS: Record<string, VideoFormat> = {
   'mp4-h264': {
+    label: 'MP4 (H.264)',
     extension: 'mp4',
     mimeType: 'video/mp4',
     codec: 'libx264',
-    label: 'MP4 (H.264)',
-    description: 'Best for web and universal compatibility',
-    compatibleFrom: ['mov', 'mp4', 'webm', 'avi', 'mkv', 'flv'],
+    compatibleFrom: ['mp4', 'mov', 'webm', 'mkv'],
     settings: {
       preset: 'medium',
       crf: '23'
     }
   },
   'mp4-h265': {
+    label: 'MP4 (H.265/HEVC)',
     extension: 'mp4',
     mimeType: 'video/mp4',
     codec: 'libx265',
-    label: 'MP4 (H.265/HEVC)',
-    description: 'High efficiency, smaller file size',
-    compatibleFrom: ['mov', 'mp4', 'mkv'],
+    compatibleFrom: ['mp4', 'mov', 'webm', 'mkv'],
     settings: {
       preset: 'medium',
       crf: '28',
@@ -34,55 +44,17 @@ const VIDEO_FORMATS = {
     }
   },
   'webm-vp9': {
+    label: 'WebM (VP9)',
     extension: 'webm',
     mimeType: 'video/webm',
     codec: 'libvpx-vp9',
-    label: 'WebM (VP9)',
-    description: 'Open format, good for web',
     compatibleFrom: ['mp4', 'webm', 'mkv'],
-    settings: {
-      quality: 'good',
-      cpuUsed: '4'
-    }
-  },
-  'mov-h264': {
-    extension: 'mov',
-    mimeType: 'video/quicktime',
-    codec: 'libx264',
-    label: 'QuickTime MOV (H.264)',
-    description: 'Apple QuickTime format',
-    compatibleFrom: ['mov', 'mp4', 'mkv'],
     settings: {
       preset: 'medium',
       crf: '23'
     }
-  },
-  'prores': {
-    extension: 'mov',
-    mimeType: 'video/quicktime',
-    codec: 'prores_ks',
-    label: 'ProRes',
-    description: 'Professional Apple format',
-    compatibleFrom: ['mov', 'mp4'],
-    settings: {
-      profile: '3', // ProRes 422 HQ
-      vendor: 'apl0',
-      bits_per_mb: '8000'
-    }
-  },
-  'dnxhd': {
-    extension: 'mxf',
-    mimeType: 'application/mxf',
-    codec: 'dnxhd',
-    label: 'DNxHD',
-    description: 'Professional Avid format',
-    compatibleFrom: ['mov', 'mxf', 'mp4'],
-    settings: {
-      profile: 'dnxhr_hq',
-      bits_per_mb: '8000'
-    }
   }
-} as const;
+};
 
 function VideoConverterContent() {
   const { ffmpeg, loaded, fetchFile } = useFFmpeg();
@@ -124,10 +96,10 @@ function VideoConverterContent() {
   };
 
   // Check format compatibility
-  const getCompatibleFormats = (sourceFormat: string): (keyof typeof VIDEO_FORMATS)[] => {
+  const getCompatibleFormats = (sourceFormat: string): string[] => {
     return Object.entries(VIDEO_FORMATS)
       .filter(([_, format]) => format.compatibleFrom.includes(sourceFormat))
-      .map(([key]) => key as keyof typeof VIDEO_FORMATS);
+      .map(([key]) => key);
   };
 
   const handleUploadClick = () => {
