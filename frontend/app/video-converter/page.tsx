@@ -94,7 +94,10 @@ function VideoConverterContent() {
   }
 
   const convertVideo = async () => {
-    if (!videoData || !targetFormat) return;
+    if (!videoData || !targetFormat || !ffmpeg) {
+      setError('Please wait for the converter to load and select a video');
+      return;
+    }
 
     setIsConverting(true);
     setError('');
@@ -131,8 +134,10 @@ function VideoConverterContent() {
       await ffmpeg.exec(args);
 
       // Read the output file
-      const data = await ffmpeg.readFile(`output.${outputExt}`);
-      const uint8Array = new Uint8Array(data);
+      const outputData = await ffmpeg.readFile(`output.${outputExt}`);
+      
+      // Convert FileData to Uint8Array
+      const uint8Array = new Uint8Array(await outputData.arrayBuffer());
 
       // Create and trigger download
       const blob = new Blob([uint8Array], { type: format.mimeType });
