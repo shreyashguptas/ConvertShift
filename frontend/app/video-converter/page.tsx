@@ -5,6 +5,7 @@ import { FFmpegProvider, useFFmpeg } from '@/components/ffmpeg-provider';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { fetchFile } from '@ffmpeg/util'
 
 interface VideoFormat {
   label: string;
@@ -61,7 +62,7 @@ function VideoConverterContent() {
   const { ffmpeg, loaded } = useFFmpeg();
   const [sourceFormat, setSourceFormat] = useState('');
   const [targetFormat, setTargetFormat] = useState('');
-  const [videoData, setVideoData] = useState<Uint8Array | null>(null);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
   const [isConverting, setIsConverting] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState('');
@@ -76,13 +77,13 @@ function VideoConverterContent() {
     if (!file) {
       setSourceFormat('')
       setTargetFormat('')
-      setVideoData(null)
+      setVideoFile(null)
       return
     }
 
     const format = file.name.split('.').pop()?.toLowerCase() || ''
     setSourceFormat(format)
-    setVideoData(new Uint8Array(await file.arrayBuffer()))
+    setVideoFile(file)
 
     // Set first compatible format as default
     const compatibleFormats = getCompatibleFormats(format)
@@ -94,7 +95,7 @@ function VideoConverterContent() {
   }
 
   const convertVideo = async () => {
-    if (!videoData || !targetFormat || !ffmpeg) {
+    if (!videoFile || !targetFormat || !ffmpeg) {
       setError('Please wait for the converter to load and select a video');
       return;
     }
@@ -113,7 +114,9 @@ function VideoConverterContent() {
         return;
       }
 
-      await ffmpeg.writeFile(`input.${inputExt}`, videoData);
+      // Write input file using fetchFile utility
+      const inputData = await fetchFile(videoFile);
+      await ffmpeg.writeFile(`input.${inputExt}`, inputData);
       
       const args = [
         '-i', `input.${inputExt}`,
@@ -136,17 +139,18 @@ function VideoConverterContent() {
       // Read the output file
       const outputData = await ffmpeg.readFile(`output.${outputExt}`);
       
-      // Convert FileData to Uint8Array
-      const uint8Array = new Uint8Array(await outputData.arrayBuffer());
-
-      // Create and trigger download
-      const blob = new Blob([uint8Array], { type: format.mimeType });
+      // Create blob from the output data
+      const blob = new Blob([outputData], { type: format.mimeType });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `converted-video.${outputExt}`;
       a.click();
       URL.revokeObjectURL(url);
+
+      // Clean up
+      await ffmpeg.deleteFile(`input.${inputExt}`);
+      await ffmpeg.deleteFile(`output.${outputExt}`);
 
       setIsConverting(false);
       setProgress(100);
@@ -220,7 +224,7 @@ function VideoConverterContent() {
           </div>
         </div>
 
-        {videoData && (
+        {videoFile && (
           <div className="space-y-4">
             <div className="space-y-2">
               <Label className="text-sm font-medium">Target Format</Label>
