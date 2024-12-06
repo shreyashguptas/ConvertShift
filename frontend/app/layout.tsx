@@ -1,6 +1,8 @@
 import { Analytics } from '@/components/analytics';
 import { Sidebar } from '@/components/layout/sidebar';
 import { Footer } from '@/components/layout/footer';
+import { FeedbackButton } from '@/components/feedback-button';
+import { Toaster } from '@/components/ui/toaster';
 import type { Metadata } from 'next';
 import './globals.css';
 
@@ -57,6 +59,8 @@ export default function RootLayout({
             </main>
           </div>
         </div>
+        <FeedbackButton />
+        <Toaster />
         <Analytics />
       </body>
     </html>
