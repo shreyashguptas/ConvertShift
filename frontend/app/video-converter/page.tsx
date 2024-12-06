@@ -51,7 +51,8 @@ const VIDEO_FORMATS: Record<string, VideoFormat> = {
     compatibleFrom: ['mp4', 'webm', 'mkv'],
     settings: {
       preset: 'medium',
-      crf: '23'
+      crf: '30',
+      extraArgs: ['-b:v', '0', '-deadline', 'good', '-cpu-used', '4']
     }
   }
 };
@@ -189,109 +190,62 @@ function VideoConverterContent() {
     );
   }
 
-  const getFFmpegArgs = (format: typeof VIDEO_FORMATS[keyof typeof VIDEO_FORMATS], inputFile: string, outputFile: string): string[] => {
-    const args = ['-i', inputFile];
-
-    // Add codec-specific settings
-    switch (format.codec) {
-      case 'libx264':
-      case 'libx265':
-        args.push(
-          '-c:v', format.codec,
-          '-preset', format.settings.preset,
-          '-crf', format.settings.crf
-        );
-        if (format.settings.extraArgs) {
-          args.push(...format.settings.extraArgs);
-        }
-        break;
-      case 'libvpx-vp9':
-        args.push(
-          '-c:v', format.codec,
-          '-quality', format.settings.quality,
-          '-cpu-used', format.settings.cpuUsed
-        );
-        break;
-      case 'prores_ks':
-        args.push(
-          '-c:v', format.codec,
-          '-profile:v', format.settings.profile,
-          '-vendor', format.settings.vendor,
-          '-bits_per_mb', format.settings.bits_per_mb
-        );
-        break;
-      case 'dnxhd':
-        args.push(
-          '-c:v', format.codec,
-          '-profile:v', format.settings.profile,
-          '-bits_per_mb', format.settings.bits_per_mb
-        );
-        break;
-    }
-
-    // Add audio settings
-    args.push(
-      '-c:a', 'aac',
-      '-b:a', '320k',
-      outputFile
-    );
-
-    return args;
-  };
-
   const convertVideo = async () => {
-    if (!video || !loaded || !ffmpeg || !targetFormat) {
-      setError('Please select a video and target format');
-      return;
-    }
+    if (!videoData || !targetFormat) return;
 
-    const sourceFormat = getFileExtension(video.name);
-    const format = VIDEO_FORMATS[targetFormat];
-
-    if (!format.compatibleFrom.includes(sourceFormat)) {
-      setError(`Cannot convert from ${sourceFormat} to ${format.label}`);
-      return;
-    }
-
-    setProcessing(true);
+    setIsConverting(true);
+    setError('');
     setProgress(0);
-    setError(null);
 
     try {
-      console.log('Starting conversion...');
-      const videoData = await fetchFile(video);
+      const format = VIDEO_FORMATS[targetFormat];
+      const inputExt = sourceFormat.toLowerCase();
+      const outputExt = format.extension;
+
+      if (!format.compatibleFrom.includes(sourceFormat)) {
+        setError(`Cannot convert from ${sourceFormat} to ${format.label}`);
+        return;
+      }
+
+      await ffmpeg.writeFile(`input.${inputExt}`, videoData);
       
-      console.log('Writing input file...');
-      await ffmpeg.writeFile('input.mp4', videoData);
+      const args = [
+        '-i', `input.${inputExt}`,
+        '-c:v', format.codec,
+        '-preset', format.settings.preset,
+        '-crf', format.settings.crf
+      ];
 
-      const outputFileName = `output.${format.extension}`;
-      const args = getFFmpegArgs(format, 'input.mp4', outputFileName);
+      // Add format-specific extra arguments
+      if (format.settings.extraArgs) {
+        args.push(...format.settings.extraArgs);
+      }
 
-      console.log('Running FFmpeg command:', args.join(' '));
+      // Add output file
+      args.push(`output.${outputExt}`);
+
+      // Run the conversion
       await ffmpeg.exec(args);
 
-      console.log('Reading output file...');
-      const outputData = await ffmpeg.readFile(outputFileName);
-      const blob = new Blob([outputData], { type: format.mimeType });
-      const url = URL.createObjectURL(blob);
-      
-      console.log('Creating download link...');
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `converted-${fileName.split('.')[0]}.${format.extension}`;
-      link.click();
+      // Read the output file
+      const data = await ffmpeg.readFile(`output.${outputExt}`);
+      const uint8Array = new Uint8Array(data);
 
+      // Create and trigger download
+      const blob = new Blob([uint8Array], { type: format.mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `converted-video.${outputExt}`;
+      a.click();
       URL.revokeObjectURL(url);
-      await ffmpeg.deleteFile('input.mp4');
-      await ffmpeg.deleteFile(outputFileName);
-      
-      console.log('Conversion completed successfully');
-    } catch (error) {
-      console.error('Error during conversion:', error);
-      setError(error instanceof Error ? error.message : 'An error occurred during conversion');
-    } finally {
-      setProcessing(false);
+
+      setIsConverting(false);
       setProgress(100);
+    } catch (error) {
+      console.error('Conversion error:', error);
+      setError('Failed to convert video. Please try again.');
+      setIsConverting(false);
     }
   };
 
