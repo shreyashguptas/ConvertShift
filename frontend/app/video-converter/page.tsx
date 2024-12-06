@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { FFmpegProvider, useFFmpeg } from '@/components/ffmpeg-provider';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -18,6 +18,12 @@ interface VideoFormat {
     crf: string;
     extraArgs?: string[];
   };
+}
+
+interface VideoInfo {
+  duration: string;
+  resolution: string;
+  size: string;
 }
 
 const VIDEO_FORMATS: Record<string, VideoFormat> = {
@@ -63,9 +69,41 @@ function VideoConverterContent() {
   const [sourceFormat, setSourceFormat] = useState('');
   const [targetFormat, setTargetFormat] = useState('');
   const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState<string | null>(null);
+  const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null);
   const [isConverting, setIsConverting] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState('');
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const formatBytes = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const getVideoInfo = (file: File): Promise<VideoInfo> => {
+    return new Promise((resolve) => {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.onloadedmetadata = () => {
+        const duration = video.duration;
+        const minutes = Math.floor(duration / 60);
+        const seconds = Math.floor(duration % 60);
+        
+        resolve({
+          duration: `${minutes}:${seconds.toString().padStart(2, '0')}`,
+          resolution: `${video.videoWidth}x${video.videoHeight}`,
+          size: formatBytes(file.size)
+        });
+        
+        URL.revokeObjectURL(video.src);
+      };
+      video.src = URL.createObjectURL(file);
+    });
+  };
 
   const getCompatibleFormats = (sourceFormat: string): string[] => {
     return Object.entries(VIDEO_FORMATS)
@@ -74,16 +112,31 @@ function VideoConverterContent() {
   };
 
   const handleFileChange = async (file: File | null) => {
+    // Clean up previous preview URL
+    if (videoPreviewUrl) {
+      URL.revokeObjectURL(videoPreviewUrl);
+    }
+
     if (!file) {
       setSourceFormat('')
       setTargetFormat('')
       setVideoFile(null)
+      setVideoPreviewUrl(null)
+      setVideoInfo(null)
       return
     }
 
     const format = file.name.split('.').pop()?.toLowerCase() || ''
     setSourceFormat(format)
     setVideoFile(file)
+
+    // Create preview URL
+    const previewUrl = URL.createObjectURL(file);
+    setVideoPreviewUrl(previewUrl);
+
+    // Get video information
+    const info = await getVideoInfo(file);
+    setVideoInfo(info);
 
     // Set first compatible format as default
     const compatibleFormats = getCompatibleFormats(format)
@@ -95,7 +148,7 @@ function VideoConverterContent() {
   }
 
   const convertVideo = async () => {
-    if (!videoFile || !targetFormat || !ffmpeg) {
+    if (!videoFile || !targetFormat || !ffmpeg || !videoInfo) {
       setError('Please wait for the converter to load and select a video');
       return;
     }
@@ -114,18 +167,65 @@ function VideoConverterContent() {
         return;
       }
 
+      // Get video dimensions
+      const [width, height] = videoInfo.resolution.split('x').map(Number);
+
       // Write input file using fetchFile utility
       const inputData = await fetchFile(videoFile);
       await ffmpeg.writeFile(`input.${inputExt}`, inputData);
+
+      // Set up progress tracking
+      ffmpeg.on('progress', ({ progress, time }) => {
+        const duration = videoRef.current?.duration || 0;
+        const percentage = (time / duration) * 100;
+        setProgress(Math.min(Math.round(percentage), 100));
+      });
       
       const args = [
         '-i', `input.${inputExt}`,
+        // Video settings
         '-c:v', format.codec,
-        '-preset', format.settings.preset,
-        '-crf', format.settings.crf
+        '-preset', 'veryfast', // Faster encoding
+        '-crf', format.settings.crf,
+        // Maintain resolution with hardware acceleration if available
+        '-vf', `scale=${width}:${height}`,
+        // Use multiple threads for faster encoding
+        '-threads', '0',
+        // Copy audio stream without re-encoding
+        '-c:a', 'copy'
       ];
 
-      // Add format-specific extra arguments
+      // Add format-specific optimizations
+      switch (format.codec) {
+        case 'libx264':
+          args.push(
+            // Use faster x264 settings
+            '-tune', 'fastdecode',
+            '-profile:v', 'high',
+            '-level', '4.1',
+            '-movflags', '+faststart'
+          );
+          break;
+        case 'libx265':
+          args.push(
+            // Optimize HEVC encoding
+            '-x265-params', 'log-level=error:pools=+frame:frame-threads=4:no-wpp=1:no-pmode=1:no-pme=1',
+            '-tag:v', 'hvc1', // Better compatibility
+            '-movflags', '+faststart'
+          );
+          break;
+        case 'libvpx-vp9':
+          args.push(
+            // Optimize VP9 encoding
+            '-row-mt', '1',
+            '-tile-columns', '2',
+            '-tile-rows', '1',
+            '-frame-parallel', '1'
+          );
+          break;
+      }
+
+      // Add any additional format-specific arguments
       if (format.settings.extraArgs) {
         args.push(...format.settings.extraArgs);
       }
@@ -154,10 +254,14 @@ function VideoConverterContent() {
 
       setIsConverting(false);
       setProgress(100);
+
+      // Remove progress listener
+      ffmpeg.off('progress');
     } catch (error) {
       console.error('Conversion error:', error);
       setError('Failed to convert video. Please try again.');
       setIsConverting(false);
+      ffmpeg.off('progress');
     }
   };
 
@@ -224,8 +328,37 @@ function VideoConverterContent() {
           </div>
         </div>
 
-        {videoFile && (
-          <div className="space-y-4">
+        {videoFile && videoPreviewUrl && (
+          <div className="space-y-6">
+            {/* Video Preview */}
+            <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+              <video
+                ref={videoRef}
+                src={videoPreviewUrl}
+                controls
+                className="w-full h-full"
+              />
+            </div>
+
+            {/* Video Information */}
+            {videoInfo && (
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="text-sm text-gray-500">Duration</div>
+                  <div className="font-medium">{videoInfo.duration}</div>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="text-sm text-gray-500">Resolution</div>
+                  <div className="font-medium">{videoInfo.resolution}</div>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="text-sm text-gray-500">Size</div>
+                  <div className="font-medium">{videoInfo.size}</div>
+                </div>
+              </div>
+            )}
+
+            {/* Format Selection */}
             <div className="space-y-2">
               <Label className="text-sm font-medium">Target Format</Label>
               <Select 
@@ -245,6 +378,7 @@ function VideoConverterContent() {
               </Select>
             </div>
 
+            {/* Convert Button */}
             <Button 
               onClick={convertVideo}
               disabled={isConverting || !targetFormat} 
