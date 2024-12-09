@@ -91,7 +91,7 @@ export function FeedbackButton() {
             </div>
             
             <Textarea
-              placeholder="Tell us about your experience or report an issue..."
+              placeholder="Share your feedback on file conversion features or report any issues."
               value={feedback}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFeedback(e.target.value)}
               className="min-h-[150px] mb-4"
