@@ -33,3 +33,28 @@ Your files never leave your device. ConvertShift processes everything locally in
 ## Get Started
 
 Visit [ConvertShift](https://convertshift.com) to start converting files privately and efficiently.
+
+## Deployment Configuration
+
+The project uses Vercel for deployment and is configured as a monorepo with the Next.js application in the `frontend` directory. The deployment configuration is managed through `vercel.json`:
+
+```json
+{
+  "framework": "nextjs",
+  "buildCommand": "cd frontend && pnpm install && pnpm build",
+  "devCommand": "cd frontend && pnpm dev",
+  "installCommand": "pnpm install"
+}
+```
+
+This configuration:
+- Specifies Next.js as the framework
+- Handles the monorepo structure by changing to the frontend directory before building
+- Uses pnpm for package management
+- Ensures dependencies are installed both at the root and in the frontend directory
+
+The build process will:
+1. Install dependencies at the root level
+2. Navigate to the frontend directory
+3. Install frontend-specific dependencies
+4. Build the Next.js application
