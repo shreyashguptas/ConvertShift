@@ -19,13 +19,6 @@ I built ConvertShift because I was tired of bouncing between sketchy file conver
 - **Complete Privacy** - All processing happens locally in your browser
 - **No Limitations** - No file size limits, no ads, no signups
 
-## Coming Soon
-
-- Image Resizer
-- Video Compressor 
-- Video Format Converter
-- Document Converter
-
 ## Privacy First
 
 Your files never leave your device. ConvertShift processes everything locally in your browser - no server uploads, no data collection, no compromises on privacy.
@@ -33,3 +26,17 @@ Your files never leave your device. ConvertShift processes everything locally in
 ## Get Started
 
 Visit [ConvertShift](https://convertshift.com) to start converting files privately and efficiently.
+
+## Contributing
+
+ConvertShift is an open-source project, and we welcome contributions from the community! If you have a feature idea or face a conversion problem that isn't addressed yet, feel free to contribute. Remember that our core mission is to provide on-device file conversions without server dependencies.
+
+### Guidelines for Contributing
+- Ensure new features maintain the "no-server" philosophy
+- All processing should happen locally in the browser
+- Create a pull request with your changes
+- Document your features properly
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details. Feel free to fork this project and create your own version while maintaining the same privacy-focused principles.
