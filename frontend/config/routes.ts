@@ -10,13 +10,7 @@ export const routes = [
     href: '/image-resizer',
     icon: '📐',
     description: 'Resize images to your desired dimensions while maintaining quality'
-  },
-  {
-    label: 'Video Converter',
-    href: '/video-converter',
-    icon: '🎬',
-    description: 'Convert videos between formats while maintaining original quality'
-  },
+  }
 ] as const
 
 export const comingSoonTools = [

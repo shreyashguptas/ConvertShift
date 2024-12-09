@@ -26,138 +26,38 @@ The backend should:
 
 ## Features
 
-### Video Processing Features
+### Image Processing Features
 
-#### FFmpeg Integration
-We use FFmpeg.wasm for client-side video processing. The implementation follows these key principles:
+#### Image Compression
+The image compressor provides:
+- Quality-based compression
+- Format-specific optimizations
+- Real-time preview
+- Progress tracking
+- Batch processing
 
-1. **FFmpeg Provider Setup**
-```typescript
-// FFmpeg Provider Context
-interface FFmpegContextType {
-  ffmpeg: FFmpeg | null;
-  loaded: boolean;
-  fetchFile: typeof fetchFile;
-}
-
-// Core FFmpeg loading
-const loadFFmpeg = async () => {
-  const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
-  const instance = new FFmpeg();
-  await instance.load({
-    coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-    wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-    workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, 'text/javascript')
-  });
-};
-```
-
-2. **Format Handling**
-```typescript
-// Format configuration structure
-const FORMAT_CONFIG = {
-  extension: string;
-  mimeType: string;
-  codec: string;
-  compatibleFrom: string[];
-  settings: {
-    preset?: string;
-    crf?: string;
-    profile?: string;
-    // Other format-specific settings
-  };
-};
-```
-
-3. **Conversion Process**
-```typescript
-// Basic conversion flow
-const convertVideo = async () => {
-  await ffmpeg.writeFile('input.mp4', videoData);
-  await ffmpeg.exec([
-    '-i', 'input.mp4',
-    '-c:v', codec,
-    // Format-specific settings
-    'output.ext'
-  ]);
-  const data = await ffmpeg.readFile('output.ext');
-};
-```
-
-#### Video Converter
-The video converter supports multiple formats with specific optimizations:
-
-1. **Supported Formats**:
-   - MP4 (H.264/H.265)
-   - WebM (VP9)
-   - MOV (QuickTime)
-   - ProRes
-   - DNxHD
-
-2. **Format-Specific Settings**:
-```typescript
-// H.264/H.265 settings
-{
-  codec: 'libx264',
-  settings: {
-    preset: 'medium',
-    crf: '23'
-  }
-}
-
-// ProRes settings
-{
-  codec: 'prores_ks',
-  settings: {
-    profile: '3',  // ProRes 422 HQ
-    vendor: 'apl0',
-    bits_per_mb: '8000'
-  }
-}
-```
-
-3. **Format Compatibility**:
-```typescript
-const compatibilityMap = {
-  'mov': ['mp4', 'mov', 'prores'],
-  'mp4': ['mp4', 'webm', 'mov'],
-  // ... other mappings
-};
-```
+#### Image Resizing
+The image resizer supports:
+- Custom dimensions
+- Aspect ratio preservation
+- Multiple output formats
+- Batch processing
+- Preview capabilities
 
 ### Security Considerations
-
-#### CORS and SharedArrayBuffer
-FFmpeg.wasm requires specific headers for SharedArrayBuffer support:
-```javascript
-// next.config.js
-{
-  headers: [
-    {
-      key: "Cross-Origin-Opener-Policy",
-      value: "same-origin"
-    },
-    {
-      key: "Cross-Origin-Embedder-Policy",
-      value: "require-corp"
-    }
-  ]
-}
-```
 
 #### Error Handling
 Implement proper error handling for:
 - Format incompatibility
 - Memory limitations
-- Codec support
 - File size limits
 
-### Best Practices for Video Processing
+### Best Practices
 
 1. **Memory Management**:
    - Clean up resources after processing
    - Use URL.revokeObjectURL for previews
-   - Delete temporary FFmpeg files
+   - Delete temporary files
 
 2. **User Experience**:
    - Show progress indicators
@@ -166,39 +66,14 @@ Implement proper error handling for:
    - Add preview capabilities
 
 3. **Performance**:
-   - Use appropriate codec presets
-   - Optimize for quality vs speed
+   - Use appropriate quality settings
+   - Optimize for quality vs size
    - Handle large files efficiently
 
 4. **Code Organization**:
    - Separate format configurations
-   - Modular codec settings
-   - Reusable FFmpeg commands
-
-### Adding New Video Features
-When adding new video processing features:
-
-1. **FFmpeg Integration**:
-   - Use the FFmpegProvider context
-   - Follow the established format structure
-   - Add proper type definitions
-
-2. **Format Support**:
-   - Define compatibility rules
-   - Add codec-specific settings
-   - Document format limitations
-
-3. **UI Implementation**:
-   - Follow existing design patterns
-   - Add proper loading states
-   - Implement error handling
-   - Add progress indicators
-
-4. **Testing**:
-   - Test format compatibility
-   - Verify codec support
-   - Check error scenarios
-   - Validate output quality
+   - Modular settings
+   - Reusable commands
 
 ## Initial Setup
 
@@ -244,9 +119,7 @@ npm run dev
 - TypeScript
 - Tailwind CSS
 - shadcn/ui components
-- @ffmpeg/ffmpeg: WebAssembly-based video processing
-- @ffmpeg/core: FFmpeg core functionality
-- @ffmpeg/util: FFmpeg utility functions
+- browser-image-compression: Image compression library
 - @radix-ui/react-slider: For compression controls
 - @radix-ui/react-select: For format selection
 
@@ -275,15 +148,3 @@ PORT=3001
 4. Backend changes will auto-restart with nodemon
 5. Use Git for version control
 6. Follow the .gitignore rules for what not to commit
-
-## Best Practices
-- Keep frontend and backend code completely separate
-- Use TypeScript for type safety in frontend
-- Follow the established folder structure
-- Document new features and changes
-- Use environment variables for configuration
-- Keep dependencies up to date
-- Implement all file processing on the client side
-- Use efficient client-side libraries for file conversion
-- Optimize for browser-based processing
-- Consider progressive enhancement for better user experience
