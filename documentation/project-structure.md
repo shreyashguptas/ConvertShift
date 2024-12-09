@@ -19,7 +19,6 @@ frontend/
 │   ├── layout.tsx         # Root layout
 │   ├── globals.css        # Global styles
 │   ├── image-resizer/     # Image resizer feature
-│   ├── video-compressor/  # Video compressor feature
 │   └── video-converter/   # Video converter feature
 ├── components/            # Reusable React components
 │   ├── ui/               # UI components from shadcn
@@ -79,7 +78,6 @@ The application uses Next.js App Router with the following routes:
 ```
 /                           # Homepage
 ├── /image-resizer         # Image resizer tool
-├── /video-compressor     # Video compression tool
 └── /video-converter      # Video format converter
 ```
 

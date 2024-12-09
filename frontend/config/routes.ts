@@ -12,12 +12,6 @@ export const routes = [
     description: 'Resize images to your desired dimensions while maintaining quality'
   },
   {
-    label: 'Video Compressor',
-    href: '/video-compressor',
-    icon: '🎥',
-    description: 'Compress videos with custom quality and resolution settings'
-  },
-  {
     label: 'Video Converter',
     href: '/video-converter',
     icon: '🎬',

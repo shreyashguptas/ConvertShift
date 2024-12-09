@@ -84,36 +84,6 @@ const convertVideo = async () => {
 };
 ```
 
-#### Video Compressor
-The video compressor feature provides:
-- Resolution control (8K to 144p)
-- Quality-based compression using CRF
-- Format-specific optimizations
-- Real-time preview
-- Progress tracking
-
-Implementation details:
-```typescript
-// Resolution configuration
-const VIDEO_RESOLUTIONS = {
-  '8K': { width: 7680, height: 4320 },
-  '4K': { width: 3840, height: 2160 },
-  // ... other resolutions
-};
-
-// FFmpeg compression command
-const args = [
-  '-i', 'input.mp4',
-  '-c:v', 'libx264',
-  '-crf', crf.toString(),
-  '-preset', 'medium',
-  '-vf', `scale=${width}:${height}`,
-  '-c:a', 'aac',
-  '-b:a', '128k',
-  'output.mp4'
-];
-```
-
 #### Video Converter
 The video converter supports multiple formats with specific optimizations:
 
