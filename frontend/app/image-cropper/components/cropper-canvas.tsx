@@ -54,28 +54,33 @@ export const CropperCanvas = forwardRef<CropperCanvasRef, CropperCanvasProps>(
       tempCanvas.width = cropArea.width;
       tempCanvas.height = cropArea.height;
 
+      // Calculate the scale based on rotation
+      const canvas = canvasRef.current;
+      const isRotated90or270 = rotation % 180 !== 0;
+      const originalWidth = isRotated90or270 ? imageObj.height : imageObj.width;
+      const scale = canvas.width / originalWidth;
+
       // Save context state
       tempCtx.save();
 
-      // Draw only the cropped portion of the image
-      if (rotation !== 0) {
-        // If rotated, we need to handle the rotation
-        tempCtx.translate(tempCanvas.width / 2, tempCanvas.height / 2);
-        tempCtx.rotate((rotation * Math.PI) / 180);
-        tempCtx.translate(-tempCanvas.width / 2, -tempCanvas.height / 2);
-      }
-
-      // Calculate the scale of the image
-      const canvas = canvasRef.current;
-      const scale = canvas.width / imageObj.width;
-
       // Draw the cropped portion
+      const sourceX = cropArea.x / scale;
+      const sourceY = cropArea.y / scale;
+      const sourceWidth = cropArea.width / scale;
+      const sourceHeight = cropArea.height / scale;
+
+      // Apply rotation to the temp canvas
+      tempCtx.translate(tempCanvas.width / 2, tempCanvas.height / 2);
+      tempCtx.rotate((rotation * Math.PI) / 180);
+      tempCtx.translate(-tempCanvas.width / 2, -tempCanvas.height / 2);
+
+      // Draw the image with proper rotation and cropping
       tempCtx.drawImage(
         imageObj,
-        cropArea.x / scale,
-        cropArea.y / scale,
-        cropArea.width / scale,
-        cropArea.height / scale,
+        sourceX,
+        sourceY,
+        sourceWidth,
+        sourceHeight,
         0,
         0,
         cropArea.width,
@@ -98,14 +103,32 @@ export const CropperCanvas = forwardRef<CropperCanvasRef, CropperCanvasProps>(
       // Clear the entire canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // First, draw the image
-      ctx.save();
+      // Calculate the center of the canvas
       const centerX = canvas.width / 2;
       const centerY = canvas.height / 2;
+
+      // Save the context state
+      ctx.save();
+
+      // Move to the center, rotate, and move back
       ctx.translate(centerX, centerY);
       ctx.rotate((rotation * Math.PI) / 180);
-      ctx.translate(-centerX, -centerY);
-      ctx.drawImage(imageObj, 0, 0, canvas.width, canvas.height);
+
+      // Calculate the scaled dimensions based on rotation
+      const isRotated90or270 = rotation % 180 !== 0;
+      const scaledWidth = isRotated90or270 ? canvas.height : canvas.width;
+      const scaledHeight = isRotated90or270 ? canvas.width : canvas.height;
+
+      // Draw the image centered
+      ctx.drawImage(
+        imageObj,
+        -scaledWidth / 2,
+        -scaledHeight / 2,
+        scaledWidth,
+        scaledHeight
+      );
+
+      // Restore the context state
       ctx.restore();
 
       // Create a semi-transparent overlay
@@ -152,17 +175,22 @@ export const CropperCanvas = forwardRef<CropperCanvasRef, CropperCanvasProps>(
           const container = containerRef.current;
           const canvas = canvasRef.current;
 
+          // Calculate rotated dimensions
+          const isRotated90or270 = rotation % 180 !== 0;
+          const rotatedWidth = isRotated90or270 ? img.height : img.width;
+          const rotatedHeight = isRotated90or270 ? img.width : img.height;
+
           // Calculate the scale to fit the image within the container
           const containerWidth = container.clientWidth;
           const containerHeight = container.clientHeight;
           const scale = Math.min(
-            containerWidth / img.width,
-            containerHeight / img.height
+            containerWidth / rotatedWidth,
+            containerHeight / rotatedHeight
           );
 
-          // Set canvas size to match scaled image dimensions
-          const scaledWidth = img.width * scale;
-          const scaledHeight = img.height * scale;
+          // Set canvas size to match scaled rotated dimensions
+          const scaledWidth = rotatedWidth * scale;
+          const scaledHeight = rotatedHeight * scale;
           canvas.width = scaledWidth;
           canvas.height = scaledHeight;
 
@@ -177,7 +205,7 @@ export const CropperCanvas = forwardRef<CropperCanvasRef, CropperCanvasProps>(
           setImageObj(img);
         }
       };
-    }, [image]);
+    }, [image, rotation]);
 
     // Redraw when image, rotation, or crop area changes
     useEffect(() => {
