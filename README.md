@@ -14,10 +14,25 @@ I built ConvertShift because I was tired of bouncing between sketchy file conver
 ## Key Features
 
 - **Image Compression** - Compress images to a target size while maintaining quality
+- **Image Cropping** - Interactive image cropping with:
+  - Drag-to-crop functionality
+  - 90-degree rotation in both directions
+  - Precise corner and edge handles
+  - Real-time preview
+  - Maintains aspect ratio during rotation
 - **Multiple Format Support** - Handle PNG, JPG, JPEG, WebP, AVIF, SVG and more
 - **Batch Processing** - Convert up to 1000 files at once
 - **Complete Privacy** - All processing happens locally in your browser
 - **No Limitations** - No file size limits, no ads, no signups
+
+## Technologies Used
+
+- **Frontend**: Next.js 14, React, TypeScript, Tailwind CSS
+- **UI Components**: shadcn/ui
+- **Image Processing**: HTML5 Canvas API
+- **State Management**: React Hooks
+- **File Handling**: Native File API
+- **Styling**: Tailwind CSS with custom animations
 
 ## Privacy First
 

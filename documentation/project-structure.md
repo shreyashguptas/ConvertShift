@@ -18,7 +18,13 @@ frontend/
 │   ├── page.tsx           # Homepage
 │   ├── layout.tsx         # Root layout
 │   ├── globals.css        # Global styles
-│   └── image-resizer/     # Image resizer feature
+│   ├── image-resizer/     # Image resizer feature
+│   └── image-cropper/     # Image cropper feature
+│       ├── page.tsx       # Main cropper page
+│       └── components/    # Cropper-specific components
+│           ├── image-cropper.tsx    # Main cropper component
+│           ├── cropper-canvas.tsx   # Canvas handling component
+│           └── rotate-controls.tsx  # Rotation controls component
 ├── components/            # Reusable React components
 │   ├── ui/               # UI components from shadcn
 │   └── shared/           # Shared components across features
@@ -76,7 +82,8 @@ The application uses Next.js App Router with the following routes:
 
 ```
 /                           # Homepage
-└── /image-resizer         # Image resizer tool
+├── /image-resizer         # Image resizer tool
+└── /image-cropper        # Image cropper tool
 ```
 
 ## Configuration Files

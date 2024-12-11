@@ -13,6 +13,15 @@ ConvertShift is a modern, client-side file conversion platform that prioritizes 
 - Individual and bulk download options
 - Special handling for SVG files
 
+### Image Cropper
+- Interactive crop area with drag-to-crop functionality
+- 90-degree rotation controls (clockwise and counter-clockwise)
+- Real-time preview of crop area
+- Maintains aspect ratio during rotation
+- Precise cropping with corner and edge handles
+- Downloads only the cropped portion
+- Supports all major image formats
+
 ### Coming Soon
 - Image Resizer
 - Video Compressor
@@ -71,6 +80,42 @@ ConvertShift is a modern, client-side file conversion platform that prioritizes 
    - Success indicators for completed operations
    - Clear file size and savings metrics
    - Improved error messages
+
+### Image Cropper Implementation
+1. Interactive Interface
+   - Drag-to-crop functionality with 8 resize handles (corners and edges)
+   - Semi-transparent overlay for better visibility of crop area
+   - Smooth cursor transitions for different handle interactions
+   - Real-time preview of crop boundaries
+   - Responsive canvas that adapts to container size
+
+2. Rotation Features
+   - 90-degree rotation in both directions (clockwise/counter-clockwise)
+   - Automatic canvas resizing on rotation (e.g., 1920x1080 → 1080x1920)
+   - Proper aspect ratio maintenance during rotation
+   - Full preview of rotated image with correct dimensions
+   - Maintains crop area proportions during rotation
+
+3. Technical Implementation
+   - Canvas-based rendering for high-performance
+   - Client-side image processing using HTML5 Canvas API
+   - Dynamic cursor handling for intuitive interactions
+   - Efficient memory management for large images
+   - Proper cleanup of canvas resources
+
+4. Download Functionality
+   - High-quality cropped image export in original format
+   - Maintains original image quality without compression
+   - Proper handling of rotated dimensions in final output
+   - Clean export without UI elements (overlay/handles)
+   - Efficient memory handling during export
+
+5. User Experience
+   - Drag-and-drop file upload support
+   - Clear visual feedback during interactions
+   - Smooth animations for rotation
+   - Responsive design that works on all screen sizes
+   - Intuitive controls with hover tooltips
 
 ### Brand Identity
 - Consistent "ConvertShift" branding
