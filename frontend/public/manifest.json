@@ -1,44 +1,57 @@
 {
   "name": "ConvertShift",
   "short_name": "ConvertShift",
-  "description": "Privacy-focused file conversion platform that transforms files right in your browser",
+  "description": "Convert your files between different formats easily and securely in your browser",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
   "orientation": "any",
-  "categories": ["utilities", "productivity"],
-  "prefer_related_applications": false,
   "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/favicon-16x16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
     {
       "src": "/icons/icon-72x72.png",
       "sizes": "72x72",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
       "src": "/icons/icon-96x96.png",
       "sizes": "96x96",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
       "src": "/icons/icon-128x128.png",
       "sizes": "128x128",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
       "src": "/icons/icon-144x144.png",
       "sizes": "144x144",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
       "src": "/icons/icon-152x152.png",
       "sizes": "152x152",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
       "src": "/icons/icon-192x192.png",
@@ -50,7 +63,7 @@
       "src": "/icons/icon-384x384.png",
       "sizes": "384x384",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
       "src": "/icons/icon-512x512.png",
@@ -59,13 +72,29 @@
       "purpose": "any maskable"
     }
   ],
+  "shortcuts": [
+    {
+      "name": "Image Compressor",
+      "short_name": "Compress",
+      "description": "Compress images while preserving quality",
+      "url": "/image-compressor",
+      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Image Cropper",
+      "short_name": "Crop",
+      "description": "Crop and rotate your images with precision",
+      "url": "/image-cropper",
+      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
+    }
+  ],
   "screenshots": [
     {
-      "src": "/screenshots/mobile.png",
-      "sizes": "1170x2532",
+      "src": "/icons/screenshot-1.png",
+      "sizes": "1280x720",
       "type": "image/png",
-      "platform": "narrow",
-      "label": "ConvertShift on Mobile"
+      "platform": "wide",
+      "label": "ConvertShift Home Screen"
     }
   ]
 } 
