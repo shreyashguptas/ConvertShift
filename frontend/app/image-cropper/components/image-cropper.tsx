@@ -18,10 +18,10 @@ export function ImageCropper() {
   const cropperRef = useRef<CropperCanvasRef>(null);
   const { toast } = useToast();
 
-  const handleFileSelect = useCallback((files: FileList) => {
-    const file = files[0];
-    if (!file) return;
+  const handleFileSelect = useCallback((files: File[]) => {
+    if (files.length === 0) return;
 
+    const file = files[0];
     if (!file.type.startsWith('image/')) {
       toast({
         title: 'Invalid file type',
@@ -31,12 +31,9 @@ export function ImageCropper() {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setImage(e.target?.result as string);
-      setRotation(0); // Reset rotation when new image is loaded
-    };
-    reader.readAsDataURL(file);
+    const url = URL.createObjectURL(file);
+    setImage(url);
+    setRotation(0);
   }, [toast]);
 
   const handleRotate = useCallback((direction: 'left' | 'right') => {
@@ -46,21 +43,27 @@ export function ImageCropper() {
     });
   }, []);
 
-  const handleDownload = useCallback(async () => {
-    if (!cropperRef.current) return;
-
-    try {
-      const croppedCanvas = cropperRef.current.getCroppedImage();
-      if (!croppedCanvas) {
-        throw new Error('Failed to get cropped image');
-      }
-
-      // Convert to blob and download
-      const blob = await new Promise<Blob>((resolve) => {
-        croppedCanvas.toBlob((blob) => {
-          if (blob) resolve(blob);
-        }, 'image/png');
+  const handleDownload = useCallback(() => {
+    const canvas = cropperRef.current?.getCroppedImage();
+    if (!canvas) {
+      toast({
+        title: 'Error',
+        description: 'Failed to crop image.',
+        variant: 'destructive',
       });
+      return;
+    }
+
+    // Create download link
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        toast({
+          title: 'Error',
+          description: 'Failed to create image file.',
+          variant: 'destructive',
+        });
+        return;
+      }
 
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -73,22 +76,16 @@ export function ImageCropper() {
 
       toast({
         title: 'Success',
-        description: 'Image downloaded successfully!',
+        description: 'Image downloaded successfully.',
       });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to download the image.',
-        variant: 'destructive',
-      });
-    }
+    });
   }, [toast]);
 
   return (
     <div className="space-y-6">
       {!image ? (
         <FileDropzone
-          onFileSelect={handleFileSelect}
+          onDrop={handleFileSelect}
           accept="image/*"
           maxFiles={1}
         />

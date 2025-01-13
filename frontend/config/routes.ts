@@ -16,6 +16,12 @@ export const routes = [
     href: '/image-cropper',
     icon: '✂️',
     description: 'Crop and rotate your images with precision. Supports PNG, JPG, JPEG, WebP, and AVIF formats.'
+  },
+  {
+    label: 'Image Converter',
+    href: '/image-converter',
+    icon: '🔄',
+    description: 'Convert images between different formats while maintaining quality. Supports PNG, JPG, JPEG, WebP, and AVIF.'
   }
 ] as const
 

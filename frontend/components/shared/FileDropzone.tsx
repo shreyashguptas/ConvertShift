@@ -5,12 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Upload } from 'lucide-react';
 
 interface FileDropzoneProps {
-  onFileSelect: (files: FileList) => void;
-  accept?: string;
+  onDrop: (files: File[]) => void;
+  accept?: string | Record<string, string[]>;
   maxFiles?: number;
 }
 
-export function FileDropzone({ onFileSelect, accept = '*', maxFiles = 1 }: FileDropzoneProps) {
+export function FileDropzone({ onDrop, accept = '*', maxFiles = 1 }: FileDropzoneProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleUploadClick = useCallback(() => {
@@ -26,26 +26,43 @@ export function FileDropzone({ onFileSelect, accept = '*', maxFiles = 1 }: FileD
     e.preventDefault();
     e.stopPropagation();
     
-    const files = e.dataTransfer.files;
+    const files = Array.from(e.dataTransfer.files);
     if (files?.length) {
       if (files.length > maxFiles) {
         alert(`Maximum ${maxFiles} files allowed`);
         return;
       }
-      onFileSelect(files);
+      onDrop(files);
     }
-  }, [maxFiles, onFileSelect]);
+  }, [maxFiles, onDrop]);
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
+    const files = e.target.files ? Array.from(e.target.files) : [];
     if (files?.length) {
       if (files.length > maxFiles) {
         alert(`Maximum ${maxFiles} files allowed`);
         return;
       }
-      onFileSelect(files);
+      onDrop(files);
     }
-  }, [maxFiles, onFileSelect]);
+  }, [maxFiles, onDrop]);
+
+  // Convert accept prop to string for input element
+  const acceptString = typeof accept === 'string' 
+    ? accept 
+    : Object.entries(accept)
+        .map(([type, exts]) => exts.join(', '))
+        .join(', ');
+
+  // Get display text for accepted types
+  const getAcceptText = () => {
+    if (typeof accept === 'string') {
+      return accept === 'image/*' ? 'PNG, JPG, JPEG, WebP, AVIF, SVG' : accept;
+    }
+    return Object.entries(accept)
+      .map(([type, exts]) => exts.map(ext => ext.replace('.', '').toUpperCase()).join(', '))
+      .join(', ');
+  };
 
   return (
     <div
@@ -64,7 +81,7 @@ export function FileDropzone({ onFileSelect, accept = '*', maxFiles = 1 }: FileD
             <div className="space-y-1 text-center">
               <p className="text-sm text-gray-600">Choose files or drag & drop</p>
               <p className="text-xs text-gray-500">
-                {accept === 'image/*' ? 'PNG, JPG, JPEG, WebP, AVIF, SVG' : accept}
+                {getAcceptText()}
                 {maxFiles > 1 ? ` (up to ${maxFiles} files)` : ''}
               </p>
             </div>
@@ -73,7 +90,7 @@ export function FileDropzone({ onFileSelect, accept = '*', maxFiles = 1 }: FileD
         <input
           ref={fileInputRef}
           type="file"
-          accept={accept}
+          accept={acceptString}
           onChange={handleFileChange}
           className="hidden"
           multiple={maxFiles > 1}
