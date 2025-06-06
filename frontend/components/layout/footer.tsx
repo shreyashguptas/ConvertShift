@@ -23,7 +23,7 @@ export function Footer() {
             <span>Support</span>
           </Link>
           <Link 
-            href="https://github.com/shreyashgupta/file-converter" 
+            href="https://github.com/shreyashguptas/file-converter" 
             target="_blank"
             className="flex items-center gap-1 hover:text-gray-900 transition-colors"
           >
