@@ -3,7 +3,7 @@ import { Sidebar } from '@/components/layout/sidebar';
 import { Footer } from '@/components/layout/footer';
 import { FeedbackButton } from '@/components/feedback-button';
 import { Toaster } from '@/components/ui/toaster';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { ServiceWorkerRegistration } from './components/ServiceWorkerRegistration';
 
@@ -11,7 +11,6 @@ export const metadata: Metadata = {
   title: 'ConvertShift',
   description: 'Convert your files between different formats easily and securely in your browser',
   manifest: '/manifest.json',
-  themeColor: '#000000',
   metadataBase: new URL('https://convertshift.com'),
   
   // Basic favicon
@@ -89,6 +88,10 @@ export const metadata: Metadata = {
     description: 'Convert your files between different formats easily and securely in your browser',
     images: ['/icons/twitter-image.png'],
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: '#000000',
 };
 
 export default function RootLayout({

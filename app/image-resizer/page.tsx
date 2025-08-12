@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useRef, ChangeEvent } from 'react';
+import { useState, ChangeEvent, useRef } from 'react';
+import NextImage from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
@@ -15,7 +16,6 @@ export default function ImageResizer() {
   const [fileSize, setFileSize] = useState<string>('');
   const [originalFileSize, setOriginalFileSize] = useState(0);
   const [estimatedNewSize, setEstimatedNewSize] = useState<string>('');
-  const imageRef = useRef<HTMLImageElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const calculateEstimatedSize = (width: number, height: number, originalSize: number) => {
@@ -73,7 +73,7 @@ export default function ImageResizer() {
       const dataUrl = e.target?.result as string;
       setImage(dataUrl);
 
-      const img = new Image();
+      const img = new window.Image();
       img.onload = () => {
         const width = img.width;
         const height = img.height;
@@ -118,7 +118,7 @@ export default function ImageResizer() {
   const canUpscale = imageType === 'image/svg+xml';
 
   const handleResize = async () => {
-    if (!image || !imageRef.current) return;
+    if (!image) return;
 
     const canvas = document.createElement('canvas');
     canvas.width = newDimensions.width;
@@ -127,7 +127,7 @@ export default function ImageResizer() {
     
     if (!ctx) return;
 
-    const img = new Image();
+    const img = new window.Image();
     img.src = image;
     
     await new Promise((resolve) => {
@@ -214,11 +214,12 @@ export default function ImageResizer() {
 
                 <div className="bg-white rounded-lg border p-6 space-y-6">
                   <div className="aspect-video relative rounded-lg border overflow-hidden bg-gray-50">
-                    <img
-                      ref={imageRef}
+                    <NextImage
                       src={image}
                       alt="Preview"
-                      className="object-contain w-full h-full"
+                      fill
+                      sizes="100vw"
+                      className="object-contain"
                     />
                   </div>
 
