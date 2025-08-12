@@ -12,7 +12,6 @@ node_modules/
 /out/
 /build
 .next/
-frontend/.next/
 
 # Production
 /build
