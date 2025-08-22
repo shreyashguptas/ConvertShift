@@ -98,16 +98,16 @@ pnpm dev
 ## Installed Dependencies
 
 ### Dependencies
-- Next.js v15.0.3: React framework
-- React: UI library
-- TypeScript: Type safety
-- Tailwind CSS: Styling
-- shadcn/ui components: UI component library
-- browser-image-compression: Image compression library
-- pdf-lib: PDF manipulation library
-- @radix-ui/react-*: Component primitives
-- lucide-react: Icon library
-- jszip: ZIP file creation
+- Next.js v15.5.0: React framework with latest optimizations
+- React v19.1.1: UI library with latest features
+- TypeScript v5.9.2: Type safety and development experience
+- Tailwind CSS v3.4.15: Utility-first CSS framework
+- shadcn/ui components: Modern UI component library
+- browser-image-compression: Client-side image compression
+- pdf-lib v1.17.1: PDF manipulation and compression
+- @radix-ui/react-*: Accessible component primitives
+- lucide-react v0.541.0: Beautiful icon library
+- jszip: ZIP file creation for batch downloads
 
 ## Environment Variables
 
