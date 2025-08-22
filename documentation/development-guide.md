@@ -2,8 +2,7 @@
 
 ## Prerequisites
 - Node.js (v18 or higher)
-- pnpm (for frontend package management)
-- npm (for backend package management)
+- pnpm (for package management)
 - Git
 
 ## Architecture Guidelines
@@ -83,68 +82,46 @@ git clone [repository-url]
 cd file-converter
 ```
 
-### Frontend Setup
+### Setup
 ```bash
-cd frontend
 pnpm install
-```
-
-### Backend Setup
-```bash
-cd backend
-npm install
 ```
 
 ## Running the Application
 
-### Frontend Development Server
+### Development Server
 ```bash
-cd frontend
 pnpm dev
 # Runs on http://localhost:3000
 ```
 
-### Backend Development Server
-```bash
-cd backend
-npm run dev
-# Runs on http://localhost:3001
-```
-
 ## Installed Dependencies
 
-### Frontend Dependencies
-- Next.js v15.0.3
-- React
-- TypeScript
-- Tailwind CSS
-- shadcn/ui components
+### Dependencies
+- Next.js v15.0.3: React framework
+- React: UI library
+- TypeScript: Type safety
+- Tailwind CSS: Styling
+- shadcn/ui components: UI component library
 - browser-image-compression: Image compression library
-- @radix-ui/react-slider: For compression controls
-- @radix-ui/react-select: For format selection
-
-### Backend Dependencies
-- express: Web framework
-- cors: Cross-Origin Resource Sharing
-- dotenv: Environment variable management
-- nodemon: Development server with hot reload
+- pdf-lib: PDF manipulation library
+- @radix-ui/react-*: Component primitives
+- lucide-react: Icon library
+- jszip: ZIP file creation
 
 ## Environment Variables
 
-### Frontend (.env.local)
+### Environment (.env.local)
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:3001
-```
-
-### Backend (.env)
-```env
-PORT=3001
+# Add any environment variables as needed
+# Currently no environment variables are required
 ```
 
 ## Development Workflow
-1. Start both frontend and backend servers
+1. Start the development server with `pnpm dev`
 2. Make changes to the code
-3. Frontend changes will hot-reload automatically
-4. Backend changes will auto-restart with nodemon
-5. Use Git for version control
-6. Follow the .gitignore rules for what not to commit
+3. Changes will hot-reload automatically
+4. Use Git for version control
+5. Follow the .gitignore rules for what not to commit
+6. Use `pnpm build` to test production builds
+7. Deploy via Vercel integration
