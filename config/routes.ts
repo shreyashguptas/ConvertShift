@@ -22,6 +22,12 @@ export const routes = [
     href: '/image-converter',
     icon: '🔄',
     description: 'Convert images between different formats while maintaining quality. Supports PNG, JPG, JPEG, WebP, and AVIF.'
+  },
+  {
+    label: 'PDF Compressor',
+    href: '/pdf-compressor',
+    icon: '📄',
+    description: 'Compress PDF files while maintaining quality (up to 500MB)'
   }
 ] as const
 
