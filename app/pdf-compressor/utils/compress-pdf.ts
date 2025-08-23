@@ -455,15 +455,77 @@ async function createCompressedPDF(
         continue
       }
       
-      // Convert canvas to compressed image
-      const blob = await new Promise<Blob | null>((resolve) => {
-        canvas.toBlob((result) => {
-          if (result) {
-            console.log(`Page ${pageNum} compressed to ${(result.size / 1024).toFixed(2)}KB`)
+      // Helper: compute sharpness on a downsampled 512px-wide version
+      const computeSharpness = (sourceCanvas: HTMLCanvasElement) => {
+        const maxWidth = 512
+        const ratio = Math.min(1, maxWidth / sourceCanvas.width)
+        const w = Math.max(1, Math.round(sourceCanvas.width * ratio))
+        const h = Math.max(1, Math.round(sourceCanvas.height * ratio))
+        const tmp = document.createElement('canvas')
+        tmp.width = w; tmp.height = h
+        const tctx = tmp.getContext('2d')!
+        tctx.drawImage(sourceCanvas, 0, 0, w, h)
+        const img = tctx.getImageData(0, 0, w, h)
+        // Gradient magnitude sum as a simple sharpness proxy
+        let sharp = 0
+        for (let y = 1; y < h - 1; y++) {
+          for (let x = 1; x < w - 1; x++) {
+            const i = (y * w + x) * 4
+            const gx = img.data[i + 0] - img.data[i - 4]
+            const gy = img.data[i + 0] - img.data[i - 4 * w]
+            sharp += Math.abs(gx) + Math.abs(gy)
           }
-          resolve(result)
-        }, 'image/jpeg', quality)
-      })
+        }
+        return sharp / (w * h)
+      }
+
+      const baselineSharp = computeSharpness(canvas)
+
+      const tryEncodeAt = async (q: number): Promise<{ blob: Blob; sharpnessDropOk: boolean } | null> => {
+        const enc = await new Promise<Blob | null>((resolve) => {
+          canvas.toBlob((b) => resolve(b), 'image/jpeg', q)
+        })
+        if (!enc) return null
+        // Decode back to measure sharpness drop on same scale
+        try {
+          let bmp: ImageBitmap | null = null
+          if ('createImageBitmap' in window) {
+            bmp = await createImageBitmap(enc)
+          }
+          const tmp = document.createElement('canvas')
+          tmp.width = canvas.width
+          tmp.height = canvas.height
+          const tctx = tmp.getContext('2d')!
+          if (bmp) {
+            tctx.drawImage(bmp, 0, 0, tmp.width, tmp.height)
+          } else {
+            const im = new Image()
+            const p = new Promise<void>((res, rej) => { im.onload = () => res(); im.onerror = rej })
+            im.src = URL.createObjectURL(enc)
+            await p
+            tctx.drawImage(im, 0, 0, tmp.width, tmp.height)
+            URL.revokeObjectURL(im.src)
+          }
+          const sharp = computeSharpness(tmp)
+          const drop = (baselineSharp - sharp) / (baselineSharp || 1)
+          // Allow up to 10% sharpness drop to keep text readable
+          return { blob: enc, sharpnessDropOk: drop <= 0.1 }
+        } catch {
+          return { blob: enc, sharpnessDropOk: true }
+        }
+      }
+
+      // Probe qualities from high to slightly lower; pick best that keeps sharpness
+      const candidates = [Math.min(0.94, quality), 0.92, 0.9, 0.88]
+      let chosen: Blob | null = null
+      for (const q of candidates) {
+        const res = await tryEncodeAt(q)
+        if (res && res.sharpnessDropOk) {
+          chosen = res.blob
+          break
+        }
+      }
+      const blob = chosen
       
       if (blob) {
         const imageBytes = await blob.arrayBuffer()
