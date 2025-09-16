@@ -18,6 +18,12 @@ export const routes = [
     description: 'Crop and rotate your images with precision. Supports PNG, JPG, JPEG, WebP, and AVIF formats.'
   },
   {
+    label: 'Background Remover',
+    href: '/image-background-remover',
+    icon: '🧼',
+    description: 'Remove image backgrounds locally in your browser. Exports high-quality PNG.'
+  },
+  {
     label: 'Image Converter',
     href: '/image-converter',
     icon: '🔄',
