@@ -139,11 +139,11 @@ export default function PDFCompressor() {
     return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
   }
 
-  const handleDragOver = (e: React.DragEvent<HTMLButtonElement>) => {
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
   }
 
-  const handleDrop = (e: React.DragEvent<HTMLButtonElement>) => {
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     const droppedFile = e.dataTransfer.files[0]
     
@@ -188,30 +188,33 @@ export default function PDFCompressor() {
             <Label htmlFor="file-upload" className="text-base font-medium text-gray-700 mb-3 block">
               Upload PDF
             </Label>
-            <div className="relative">
-              <Button 
-                onClick={() => fileInputRef.current?.click()} 
-                variant="outline" 
-                className="w-full border-2 border-dashed h-32 hover:border-blue-500 hover:bg-blue-50/50 transition-colors"
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-              >
-                <div className="flex flex-col items-center justify-center space-y-2">
-                  <Upload className="h-8 w-8 text-blue-500" />
-                  <div className="space-y-1 text-center">
-                    <p className="text-sm text-gray-600">Choose file or drag & drop</p>
-                    <p className="text-xs text-gray-500">PDF files (up to 500MB)</p>
+            <div 
+              className="relative border-2 border-dashed border-gray-300 rounded-lg p-12 transition-colors duration-150 ease-in-out hover:border-gray-400 cursor-pointer"
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+            >
+              <div className="text-center" onClick={() => fileInputRef.current?.click()}>
+                <Button 
+                  variant="outline" 
+                  className="w-full border-2 border-dashed h-32 hover:border-blue-500 hover:bg-blue-50/50 transition-colors"
+                >
+                  <div className="flex flex-col items-center justify-center space-y-2">
+                    <Upload className="h-8 w-8 text-blue-500" />
+                    <div className="space-y-1 text-center">
+                      <p className="text-sm text-gray-600">Choose file or drag & drop</p>
+                      <p className="text-xs text-gray-500">PDF files (up to 500MB)</p>
+                    </div>
                   </div>
-                </div>
-              </Button>
-              <Input
-                id="file-upload"
-                type="file"
-                onChange={handleFileChange}
-                ref={fileInputRef}
-                accept=".pdf,application/pdf"
-                className="hidden"
-              />
+                </Button>
+                <Input
+                  id="file-upload"
+                  type="file"
+                  onChange={handleFileChange}
+                  ref={fileInputRef}
+                  accept=".pdf,application/pdf"
+                  className="hidden"
+                />
+              </div>
             </div>
 
             {/* File Display */}

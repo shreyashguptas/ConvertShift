@@ -41,27 +41,45 @@ export default function ImageCompressor() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       const selectedFiles = Array.from(event.target.files)
-      
-      // Check number of files
-      if (selectedFiles.length > MAX_FILES) {
-        alert(`Maximum ${MAX_FILES} files allowed`)
-        return
+      processFiles(selectedFiles)
+    }
+  }
+
+  const processFiles = (selectedFiles: File[]) => {
+    // Check number of files
+    if (selectedFiles.length > MAX_FILES) {
+      alert(`Maximum ${MAX_FILES} files allowed`)
+      return
+    }
+
+    // Validate each file
+    const validFiles = selectedFiles.filter(file => {
+      if (!Object.keys(SUPPORTED_FORMATS).includes(file.type)) {
+        alert(`File "${file.name}" is not a supported image format`)
+        return false
       }
+      if (file.size > MAX_FILE_SIZE) {
+        alert(`File "${file.name}" exceeds 100MB limit`)
+        return false
+      }
+      return true
+    })
 
-      // Validate each file
-      const validFiles = selectedFiles.filter(file => {
-        if (!Object.keys(SUPPORTED_FORMATS).includes(file.type)) {
-          alert(`File "${file.name}" is not a supported image format`)
-          return false
-        }
-        if (file.size > MAX_FILE_SIZE) {
-          alert(`File "${file.name}" exceeds 100MB limit`)
-          return false
-        }
-        return true
-      })
+    setFiles(prevFiles => [...prevFiles, ...validFiles])
+  }
 
-      setFiles(prevFiles => [...prevFiles, ...validFiles])
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    const files = Array.from(e.dataTransfer.files)
+    if (files?.length) {
+      processFiles(files)
     }
   }
 
@@ -205,29 +223,35 @@ export default function ImageCompressor() {
             <Label htmlFor="file-upload" className="text-base font-medium text-gray-700 mb-3 block">
               Upload Images
             </Label>
-            <div className="relative">
-              <Button 
-                onClick={() => fileInputRef.current?.click()} 
-                variant="outline" 
-                className="w-full border-2 border-dashed h-32 hover:border-blue-500 hover:bg-blue-50/50 transition-colors"
-              >
-                <div className="flex flex-col items-center justify-center space-y-2">
-                  <Upload className="h-8 w-8 text-blue-500" />
-                  <div className="space-y-1 text-center">
-                    <p className="text-sm text-gray-600">Choose files or drag & drop</p>
-                    <p className="text-xs text-gray-500">PNG, JPG, JPEG, WebP, AVIF, SVG (up to {MAX_FILES} files)</p>
+            <div 
+              className="relative border-2 border-dashed border-gray-300 rounded-lg p-12 transition-colors duration-150 ease-in-out hover:border-gray-400 cursor-pointer"
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+            >
+              <div className="text-center">
+                <Button 
+                  variant="outline" 
+                  className="w-full border-2 border-dashed h-32 hover:border-blue-500 hover:bg-blue-50/50 transition-colors"
+                >
+                  <div className="flex flex-col items-center justify-center space-y-2">
+                    <Upload className="h-8 w-8 text-blue-500" />
+                    <div className="space-y-1 text-center">
+                      <p className="text-sm text-gray-600">Choose files or drag & drop</p>
+                      <p className="text-xs text-gray-500">PNG, JPG, JPEG, WebP, AVIF, SVG (up to {MAX_FILES} files)</p>
+                    </div>
                   </div>
-                </div>
-              </Button>
-              <Input
-                id="file-upload"
-                type="file"
-                onChange={handleFileChange}
-                ref={fileInputRef}
-                accept=".png,.jpg,.jpeg,.webp,.avif,.svg,image/png,image/jpeg,image/webp,image/avif,image/svg+xml"
-                className="hidden"
-                multiple
-              />
+                </Button>
+                <Input
+                  id="file-upload"
+                  type="file"
+                  onChange={handleFileChange}
+                  ref={fileInputRef}
+                  accept=".png,.jpg,.jpeg,.webp,.avif,.svg,image/png,image/jpeg,image/webp,image/avif,image/svg+xml"
+                  className="hidden"
+                  multiple
+                />
+              </div>
             </div>
 
             {/* File List */}
