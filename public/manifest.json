@@ -74,17 +74,10 @@
   ],
   "shortcuts": [
     {
-      "name": "Image Compressor",
-      "short_name": "Compress",
-      "description": "Compress images while preserving quality",
-      "url": "/image-compressor",
-      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
-    },
-    {
-      "name": "Image Cropper",
-      "short_name": "Crop",
-      "description": "Crop and rotate your images with precision",
-      "url": "/image-cropper",
+      "name": "Image Modifier",
+      "short_name": "Modify",
+      "description": "All-in-one image tool: Crop, Resize, Remove Background, Compress & Convert",
+      "url": "/image-modifier",
       "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
     }
   ],

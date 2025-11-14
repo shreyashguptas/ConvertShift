@@ -27,21 +27,49 @@ The backend should:
 
 ### Image Processing Features
 
-#### Image Compression
-The image compressor provides:
-- Quality-based compression
-- Format-specific optimizations
-- Real-time preview
-- Progress tracking
-- Batch processing
+#### Image Modifier
+The unified image modifier provides comprehensive image processing with:
 
-#### Image Resizing
-The image resizer supports:
-- Custom dimensions
-- Aspect ratio preservation
-- Multiple output formats
-- Batch processing
-- Preview capabilities
+**Crop & Rotate**
+- Interactive canvas-based cropping
+- Drag-to-crop functionality
+- 90-degree rotation controls
+- Real-time visual preview with overlay
+- Precise position and dimension inputs
+
+**Background Removal**
+- AI-powered background removal
+- Uses @imgly/background-removal library
+- Client-side ML model processing
+- Progress tracking (0-100%)
+- PNG output with transparency
+
+**Resize**
+- Preset resolutions (4K, 2K, 1080p, 720p, 480p)
+- Custom width/height inputs with validation
+- Smart crop-to-fit algorithm for aspect ratio changes
+- Prevents upscaling to maintain quality
+- Real-time dimension estimation
+
+**Compression**
+- Target file size compression
+- Adaptive quality adjustment (0.8-0.85)
+- Web worker support for performance
+- Format-specific optimizations
+- Size estimation
+
+**Format Conversion**
+- Convert between PNG, JPEG, WebP, and AVIF
+- High-quality encoding (quality: 0.8)
+- Combined with compression in single encode step
+- Alpha channel preservation
+
+**Smart Processing Pipeline**
+- Optimal operation order for quality
+- Single file processing
+- Multi-step progress tracking
+- Memory-efficient blob handling
+- Automatic cleanup of temporary URLs
 
 ### Security Considerations
 

@@ -18,13 +18,10 @@ frontend/
 │   ├── page.tsx           # Homepage
 │   ├── layout.tsx         # Root layout
 │   ├── globals.css        # Global styles
-│   ├── image-resizer/     # Image resizer feature
-│   └── image-cropper/     # Image cropper feature
-│       ├── page.tsx       # Main cropper page
-│       └── components/    # Cropper-specific components
-│           ├── image-cropper.tsx    # Main cropper component
-│           ├── cropper-canvas.tsx   # Canvas handling component
-│           └── rotate-controls.tsx  # Rotation controls component
+│   ├── image-modifier/    # Unified image processing tool
+│   │   └── page.tsx       # All-in-one image modifier
+│   └── pdf-compressor/    # PDF compression feature
+│       └── page.tsx       # PDF compressor page
 ├── components/            # Reusable React components
 │   ├── ui/               # UI components from shadcn
 │   └── shared/           # Shared components across features
@@ -82,8 +79,8 @@ The application uses Next.js App Router with the following routes:
 
 ```
 /                           # Homepage
-├── /image-resizer         # Image resizer tool
-└── /image-cropper        # Image cropper tool
+├── /image-modifier        # All-in-one image processing tool
+└── /pdf-compressor        # PDF compression tool
 ```
 
 ## Configuration Files

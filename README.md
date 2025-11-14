@@ -13,15 +13,14 @@ I built ConvertShift because I was tired of bouncing between sketchy file conver
 
 ## Key Features
 
-- **Image Compression** - Compress images to a target size while maintaining quality
-- **Image Cropping** - Interactive image cropping with:
-  - Drag-to-crop functionality
-  - 90-degree rotation in both directions
-  - Precise corner and edge handles
-  - Real-time preview
-  - Maintains aspect ratio during rotation
-- **Multiple Format Support** - Handle PNG, JPG, JPEG, WebP, AVIF, SVG and more
-- **Batch Processing** - Convert up to 1000 files at once
+- **Image Modifier** - All-in-one image processing tool with:
+  - **Crop & Rotate** - Interactive canvas with drag-to-crop and rotation controls
+  - **Background Removal** - AI-powered background removal using ML models
+  - **Resize** - Smart resizing with preset resolutions (4K, 2K, 1080p, 720p, 480p) or custom dimensions
+  - **Compression** - Target file size compression with adaptive quality
+  - **Format Conversion** - Convert between PNG, JPEG, WebP, and AVIF
+  - **Smart Pipeline** - Combines multiple operations in optimal order for best quality
+- **PDF Compression** - Compress PDF files while maintaining quality (up to 500MB)
 - **Complete Privacy** - All processing happens locally in your browser
 - **No Limitations** - No file size limits, no ads, no signups
 

@@ -5,25 +5,48 @@ ConvertShift is a modern, client-side file conversion platform that prioritizes 
 
 ## Core Features
 
-### Image Compressor
-- Client-side image compression with size control
-- Supports multiple formats (PNG, JPG, JPEG, WebP, AVIF, SVG)
-- Batch processing capability (up to 1000 files)
-- Detailed compression results with size savings
-- Individual and bulk download options
-- Special handling for SVG files
+### Image Modifier
+All-in-one image processing tool with five integrated capabilities:
 
-### Image Cropper
-- Interactive crop area with drag-to-crop functionality
-- 90-degree rotation controls (clockwise and counter-clockwise)
-- Real-time preview of crop area
-- Maintains aspect ratio during rotation
-- Precise cropping with corner and edge handles
-- Downloads only the cropped portion
-- Supports all major image formats
+- **Crop & Rotate**
+  - Interactive canvas with drag-to-crop functionality
+  - 90-degree rotation controls in both directions
+  - Real-time visual preview with crop overlay
+  - Precise position and dimension controls
+
+- **Background Removal**
+  - AI-powered background removal using ML models
+  - Client-side processing with progress tracking
+  - High-quality PNG output with transparency
+
+- **Resize**
+  - Preset resolutions (4K, 2K, 1080p, 720p, 480p)
+  - Custom width/height inputs
+  - Smart crop-to-fit when changing aspect ratios
+  - Prevents upscaling for quality preservation
+
+- **Compression**
+  - Target file size compression
+  - Adaptive quality adjustment
+  - Maintains visual quality while reducing size
+
+- **Format Conversion**
+  - Convert between PNG, JPEG, WebP, and AVIF
+  - High-quality encoding settings
+  - Combined with compression in single encoding step
+
+- **Smart Processing Pipeline**
+  - Optimal operation order: Crop → Background Removal → Resize → Compress & Convert
+  - Single file processing for best quality
+  - Real-time progress tracking across all operations
+  - Memory-efficient processing
+
+### PDF Compressor
+- Client-side PDF compression with quality control
+- Supports files up to 500MB
+- Maintains document readability
 
 ### Coming Soon
-- Image Resizer
 - Video Compressor
 - Video Converter
 - Document Converter
