@@ -40,6 +40,15 @@ const RESOLUTION_PRESETS = {
   'custom': { width: 0, height: 0, label: 'Custom Dimensions' }
 };
 
+// Utility function to format file size
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+};
+
 // Collapsible Section Component
 const CollapsibleSection: React.FC<{
   title: string;
@@ -51,29 +60,35 @@ const CollapsibleSection: React.FC<{
 }> = ({ title, icon, enabled, onToggleEnabled, children, defaultOpen = false }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
+  // Handler for clicking anywhere on the header - single click enables + expands
+  const handleHeaderClick = () => {
+    const newEnabled = !enabled;
+    onToggleEnabled(newEnabled);
+    setIsOpen(newEnabled); // Auto-expand when enabling, collapse when disabling
+  };
+
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden">
-      <div className="bg-gray-50 p-4">
+      <div
+        className="bg-gray-50 p-4 cursor-pointer hover:bg-gray-100 transition-colors"
+        onClick={handleHeaderClick}
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <input
               type="checkbox"
               checked={enabled}
-              onChange={(e) => onToggleEnabled(e.target.checked)}
-              className="w-4 h-4 cursor-pointer"
+              readOnly
+              className="w-4 h-4 pointer-events-none"
             />
             <div className="flex items-center gap-2">
               {icon}
               <h3 className="font-semibold text-lg">{title}</h3>
             </div>
           </div>
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="p-1 hover:bg-gray-200 rounded transition-colors"
-            disabled={!enabled}
-          >
-            {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-          </button>
+          <div className="p-1">
+            {isOpen && enabled ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+          </div>
         </div>
       </div>
       {enabled && isOpen && (
@@ -90,6 +105,7 @@ export default function ImageModifier() {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [originalDimensions, setOriginalDimensions] = useState({ width: 0, height: 0 });
+  const [originalFileSize, setOriginalFileSize] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -139,6 +155,7 @@ export default function ImageModifier() {
     }
 
     setFile(selectedFile);
+    setOriginalFileSize(selectedFile.size);
     const reader = new FileReader();
     reader.onload = (e) => {
       const url = e.target?.result as string;
@@ -176,6 +193,7 @@ export default function ImageModifier() {
   const handleClear = () => {
     setFile(null);
     setPreviewUrl(null);
+    setOriginalFileSize(0);
     setResult(null);
     setCropArea({ x: 0, y: 0, width: 100, height: 100 });
     setRotation(0);
@@ -551,7 +569,12 @@ export default function ImageModifier() {
 
       if (processedBlob) {
         const resultUrl = URL.createObjectURL(processedBlob);
-        const filename = `modified-${file.name}`;
+        // Determine correct file extension based on output format
+        const outputExtension = (conversionEnabled && targetFormat)
+          ? targetFormat
+          : (file.name.split('.').pop() || 'png');
+        const baseFilename = file.name.replace(/\.[^/.]+$/, '');
+        const filename = `modified-${baseFilename}.${outputExtension}`;
         setResult({ blob: processedBlob, url: resultUrl, filename });
         toast.success('Image processed successfully!');
       }
@@ -616,7 +639,7 @@ export default function ImageModifier() {
                   <div>
                     <h3 className="font-semibold text-lg">Original Image</h3>
                     <p className="text-sm text-gray-500">
-                      {originalDimensions.width} × {originalDimensions.height}px
+                      {originalDimensions.width} × {originalDimensions.height}px | {formatFileSize(originalFileSize)}
                     </p>
                   </div>
                   <Button variant="outline" size="sm" onClick={handleClear}>
@@ -796,20 +819,47 @@ export default function ImageModifier() {
                   defaultOpen={false}
                 >
                   <div className="space-y-4">
+                    {/* Display current file size */}
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                      <p className="text-sm text-orange-800">
+                        Current file size: <strong>{formatFileSize(originalFileSize)}</strong>
+                      </p>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label className="text-sm font-medium mb-2 block">Target File Size</Label>
                         <Input
                           type="number"
                           value={targetSize}
-                          onChange={(e) => setTargetSize(e.target.value)}
+                          onChange={(e) => {
+                            const value = parseFloat(e.target.value) || 0;
+                            const maxSizeInUnit = sizeUnit === 'MB'
+                              ? originalFileSize / (1024 * 1024)
+                              : originalFileSize / 1024;
+                            // Clamp to not exceed original file size
+                            const clampedValue = Math.min(value, maxSizeInUnit);
+                            setTargetSize(clampedValue > 0 ? clampedValue.toString() : e.target.value);
+                          }}
                           min="0.1"
                           step="0.1"
+                          max={sizeUnit === 'MB' ? originalFileSize / (1024 * 1024) : originalFileSize / 1024}
                         />
                       </div>
                       <div>
                         <Label className="text-sm font-medium mb-2 block">Unit</Label>
-                        <Select value={sizeUnit} onValueChange={(value) => setSizeUnit(value as 'MB' | 'KB')}>
+                        <Select value={sizeUnit} onValueChange={(value) => {
+                          const newUnit = value as 'MB' | 'KB';
+                          setSizeUnit(newUnit);
+                          // Adjust target size when switching units to stay within bounds
+                          const currentTargetBytes = parseFloat(targetSize) * (sizeUnit === 'MB' ? 1024 * 1024 : 1024);
+                          if (currentTargetBytes > originalFileSize) {
+                            const newMax = newUnit === 'MB'
+                              ? (originalFileSize / (1024 * 1024)).toFixed(1)
+                              : (originalFileSize / 1024).toFixed(0);
+                            setTargetSize(newMax);
+                          }
+                        }}>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
@@ -821,7 +871,7 @@ export default function ImageModifier() {
                       </div>
                     </div>
                     <p className="text-xs text-gray-500">
-                      Target size: {targetSize} {sizeUnit} (minimum: 100 KB)
+                      Target size: {targetSize} {sizeUnit} (max: {formatFileSize(originalFileSize)})
                     </p>
                   </div>
                 </CollapsibleSection>
