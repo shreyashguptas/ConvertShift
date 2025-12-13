@@ -18,7 +18,7 @@ export default function Home() {
         {/* Privacy Badge */}
         <div className="bg-blue-50 text-blue-700 px-4 py-2 rounded-full inline-block mb-12">
           <p className="text-sm font-medium">
-            🔒 Your files never leave your device
+            🔒 Privacy-first: Files processed locally, never stored
           </p>
         </div>
 

@@ -691,7 +691,10 @@ export default function ImageModifier() {
               <p className="text-lg font-medium text-gray-700 mb-2">
                 Drop your image here or click to upload
               </p>
-              <p className="text-sm text-gray-500">Supports: PNG, JPG, WebP, AVIF, SVG + RAW formats (DNG, CR2, NEF, ARW, RAF, etc.)</p>
+              <p className="text-sm text-gray-500 mb-3">Supports: PNG, JPG, WebP, AVIF, SVG + RAW formats (DNG, CR2, NEF, ARW, RAF, etc.)</p>
+              <p className="text-xs text-gray-400">
+                🔒 Standard images processed locally. RAW files require temporary server processing (never stored).
+              </p>
               <input
                 ref={fileInputRef}
                 type="file"
