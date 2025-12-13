@@ -83,57 +83,87 @@ export async function convertRawToImage(
   onProgress?.({
     stage: 'uploading',
     progress: 10,
-    message: 'Uploading RAW file for processing...'
+    message: 'Uploading RAW file...'
   });
 
   // Create FormData with the file
   const formData = new FormData();
   formData.append('file', file);
 
-  onProgress?.({
-    stage: 'processing',
-    progress: 40,
-    message: 'Converting RAW image...'
-  });
+  // Add timeout with AbortController (55s to be under Vercel's 60s limit)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 55000);
 
-  // Send to API route
-  const response = await fetch('/api/convert-raw', {
-    method: 'POST',
-    body: formData,
-  });
+  try {
+    onProgress?.({
+      stage: 'processing',
+      progress: 40,
+      message: 'Converting RAW image...'
+    });
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-    throw new Error(errorData.error || `Server error: ${response.status}`);
+    // Send to API route with abort signal
+    const response = await fetch('/api/convert-raw', {
+      method: 'POST',
+      body: formData,
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    // Handle non-OK responses
+    if (!response.ok) {
+      let errorMessage = `Server error: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.error || errorMessage;
+      } catch {
+        // Response wasn't JSON - might be HTML error page
+      }
+      throw new Error(errorMessage);
+    }
+
+    const result = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.error || 'Conversion failed');
+    }
+
+    onProgress?.({
+      stage: 'processing',
+      progress: 80,
+      message: 'Finalizing...'
+    });
+
+    // Convert data URL to blob - with error handling
+    let blob: Blob;
+    try {
+      const base64Response = await fetch(result.dataUrl);
+      blob = await base64Response.blob();
+    } catch {
+      throw new Error('Failed to process converted image');
+    }
+
+    onProgress?.({
+      stage: 'complete',
+      progress: 100,
+      message: 'Conversion complete!'
+    });
+
+    return {
+      blob,
+      dataUrl: result.dataUrl,
+      width: result.width,
+      height: result.height,
+      metadata: {},
+    };
+  } catch (error) {
+    clearTimeout(timeoutId);
+
+    // Handle timeout specifically
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Request timed out. The file may be too large.');
+    }
+
+    throw error;
   }
-
-  onProgress?.({
-    stage: 'processing',
-    progress: 80,
-    message: 'Finalizing conversion...'
-  });
-
-  const result = await response.json();
-
-  if (!result.success) {
-    throw new Error(result.error || 'Conversion failed');
-  }
-
-  // Convert data URL to blob
-  const base64Response = await fetch(result.dataUrl);
-  const blob = await base64Response.blob();
-
-  onProgress?.({
-    stage: 'complete',
-    progress: 100,
-    message: 'Conversion complete!'
-  });
-
-  return {
-    blob,
-    dataUrl: result.dataUrl,
-    width: result.width,
-    height: result.height,
-    metadata: {},
-  };
 }

@@ -1,35 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server';
 import sharp from 'sharp';
 
+// Export runtime config for Vercel
+export const runtime = 'nodejs';
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
+  console.log('[convert-raw] Request received');
+
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;
 
     if (!file) {
-      return NextResponse.json(
-        { error: 'No file provided' },
-        { status: 400 }
-      );
+      console.log('[convert-raw] No file provided');
+      return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
-    // Read file as buffer
+    console.log(`[convert-raw] Processing file: ${file.name}, size: ${file.size}, type: ${file.type}`);
+
+    // Validate file size (max 50MB for serverless)
+    if (file.size > 50 * 1024 * 1024) {
+      console.log('[convert-raw] File too large');
+      return NextResponse.json({ error: 'File too large. Max 50MB.' }, { status: 400 });
+    }
+
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Use sharp to convert RAW to PNG
-    // Sharp uses libvips which has RAW support through various loaders
-    const image = sharp(buffer);
+    console.log('[convert-raw] Buffer created, initializing Sharp');
 
-    // Get metadata
+    // Try to process with Sharp
+    const image = sharp(buffer, { failOnError: false });
     const metadata = await image.metadata();
 
-    // Convert to PNG
-    const pngBuffer = await image
-      .png({ quality: 100 })
-      .toBuffer();
+    console.log(`[convert-raw] Metadata: format=${metadata.format}, ${metadata.width}x${metadata.height}`);
 
-    // Return the PNG as base64 with metadata
+    // Check if Sharp actually recognized the format
+    if (!metadata.format) {
+      console.log('[convert-raw] Sharp could not detect format');
+      return NextResponse.json({
+        error: 'Unsupported image format. Sharp cannot process this RAW file on Vercel.'
+      }, { status: 400 });
+    }
+
+    const pngBuffer = await image.png({ quality: 90 }).toBuffer();
+
+    console.log(`[convert-raw] Conversion complete, output size: ${pngBuffer.length}`);
+
     const base64 = pngBuffer.toString('base64');
     const dataUrl = `data:image/png;base64,${base64}`;
 
@@ -38,30 +56,14 @@ export async function POST(request: NextRequest) {
       dataUrl,
       width: metadata.width,
       height: metadata.height,
-      metadata: {
-        format: metadata.format,
-        space: metadata.space,
-        channels: metadata.channels,
-        depth: metadata.depth,
-        density: metadata.density,
-      },
     });
   } catch (error) {
-    console.error('RAW conversion error:', error);
+    console.error('[convert-raw] Error:', error);
 
-    // Check for specific errors
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
-    if (errorMessage.includes('unsupported image format')) {
-      return NextResponse.json(
-        { error: 'Unsupported RAW format. Try a different file.' },
-        { status: 400 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: `Failed to convert RAW image: ${errorMessage}` },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      error: `RAW conversion failed: ${errorMessage}`
+    }, { status: 500 });
   }
 }
