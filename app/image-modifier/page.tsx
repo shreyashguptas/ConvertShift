@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, ChangeEvent } from 'react';
 import Image from 'next/image';
-import { ChevronDown, ChevronUp, Upload, Download, X, RotateCw, RotateCcw, Scissors, Eraser, Maximize2, FileDown, Layers } from 'lucide-react';
+import { ChevronDown, ChevronUp, Upload, Download, X, RotateCw, RotateCcw, Scissors, Eraser, Maximize2, FileDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -375,7 +375,7 @@ export default function ImageModifier() {
       ctx.restore();
 
       // Draw crop rectangle border
-      ctx.strokeStyle = '#8B5CF6';
+      ctx.strokeStyle = '#3B82F6';
       ctx.lineWidth = 2;
       ctx.strokeRect(cropArea.x, cropArea.y, cropArea.width, cropArea.height);
 
@@ -388,7 +388,7 @@ export default function ImageModifier() {
         { x: cropArea.x + cropArea.width, y: cropArea.y + cropArea.height }, // bottom-right
       ];
 
-      ctx.fillStyle = '#8B5CF6';
+      ctx.fillStyle = '#3B82F6';
       handles.forEach(handle => {
         ctx.fillRect(handle.x - handleSize / 2, handle.y - handleSize / 2, handleSize, handleSize);
       });
@@ -656,29 +656,24 @@ export default function ImageModifier() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 py-8">
-      <div className="max-w-6xl mx-auto px-4">
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <Layers className="w-10 h-10 text-purple-600" />
-            <h1 className="text-4xl font-bold text-gray-800">Image Modifier</h1>
-          </div>
-          <p className="text-gray-600">
-            All-in-one image processing: Crop, Remove Background, Resize, Compress & Convert
-          </p>
+    <div className="flex flex-col items-center p-6 max-w-3xl mx-auto">
+      <div className="w-full space-y-8">
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl font-bold text-gray-900">Image Modifier</h1>
+          <p className="text-gray-500">All-in-one image processing: Crop, Remove Background, Resize, Compress & Convert</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl p-6">
+        <div className="space-y-6">
           {/* RAW Conversion Loading State */}
           {isConvertingRaw && (
-            <div className="border-2 border-purple-300 bg-purple-50 rounded-xl p-12 text-center">
-              <div className="animate-spin mx-auto mb-4 w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full" />
-              <p className="text-lg font-medium text-purple-700 mb-2">
+            <div className="border-2 border-blue-300 bg-blue-50 rounded-lg p-12 text-center">
+              <div className="animate-spin mx-auto mb-4 w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full" />
+              <p className="text-lg font-medium text-blue-700 mb-2">
                 Converting RAW Image...
               </p>
-              <p className="text-sm text-purple-600 mb-4">{rawConversionMessage}</p>
+              <p className="text-sm text-blue-600 mb-4">{rawConversionMessage}</p>
               <Progress value={rawConversionProgress} className="h-2 max-w-xs mx-auto" />
-              <p className="text-xs text-purple-500 mt-2">
+              <p className="text-xs text-blue-500 mt-2">
                 RAW conversion can take 10-30 seconds for large files
               </p>
             </div>
@@ -690,7 +685,7 @@ export default function ImageModifier() {
               onDrop={handleDrop}
               onDragOver={handleDragOver}
               onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center cursor-pointer hover:border-purple-500 hover:bg-purple-50 transition-all"
+              className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition-all"
             >
               <Upload className="mx-auto mb-4 text-gray-400" size={48} />
               <p className="text-lg font-medium text-gray-700 mb-2">
@@ -771,7 +766,7 @@ export default function ImageModifier() {
                 {/* Crop Section */}
                 <CollapsibleSection
                   title="Crop & Rotate"
-                  icon={<Scissors className="text-purple-600" size={20} />}
+                  icon={<Scissors className="text-blue-600" size={20} />}
                   enabled={cropEnabled}
                   onToggleEnabled={setCropEnabled}
                   defaultOpen={false}
