@@ -140,6 +140,20 @@ export default function ImageModifier() {
   const [currentStep, setCurrentStep] = useState<string>('');
   const [result, setResult] = useState<ProcessingResult | null>(null);
 
+  // RAW processing state
+  const [isRawFile, setIsRawFile] = useState(false);
+  const [isConvertingRaw, setIsConvertingRaw] = useState(false);
+  const [rawConversionProgress, setRawConversionProgress] = useState(0);
+  const [rawConversionMessage, setRawConversionMessage] = useState('');
+  const [rawMetadata, setRawMetadata] = useState<{
+    make?: string;
+    model?: string;
+    iso?: number;
+    shutterSpeed?: number;
+    aperture?: number;
+    focalLength?: number;
+  } | null>(null);
+
   // File upload handlers
   const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -148,32 +162,72 @@ export default function ImageModifier() {
     }
   };
 
-  const handleFile = (selectedFile: File) => {
-    if (!selectedFile.type.startsWith('image/')) {
-      toast.error('Please upload a valid image file');
+  const handleFile = async (selectedFile: File) => {
+    // Import RAW utilities
+    const { isRawFile: checkIsRaw, isStandardImage, convertRawToImage } =
+      await import('@/lib/raw-processor');
+
+    const isRaw = checkIsRaw(selectedFile);
+    setIsRawFile(isRaw);
+
+    // Validate file type
+    if (!isRaw && !isStandardImage(selectedFile)) {
+      toast.error('Please upload a valid image file (including RAW formats)');
       return;
     }
 
     setFile(selectedFile);
     setOriginalFileSize(selectedFile.size);
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const url = e.target?.result as string;
-      setPreviewUrl(url);
+    setRawMetadata(null);
 
-      // Get image dimensions
-      const img = new window.Image();
-      img.onload = () => {
-        setOriginalDimensions({ width: img.width, height: img.height });
-        // Initialize crop area to full image
-        setCropArea({ x: 0, y: 0, width: img.width, height: img.height });
-        // Initialize resize dimensions
-        setCustomWidth(img.width);
-        setCustomHeight(img.height);
+    if (isRaw) {
+      // Handle RAW file conversion
+      setIsConvertingRaw(true);
+      setRawConversionProgress(0);
+      setRawConversionMessage('Starting RAW conversion...');
+
+      try {
+        const result = await convertRawToImage(selectedFile, (progress) => {
+          setRawConversionProgress(progress.progress);
+          setRawConversionMessage(progress.message);
+        });
+
+        setPreviewUrl(result.dataUrl);
+        setOriginalDimensions({ width: result.width, height: result.height });
+        setCropArea({ x: 0, y: 0, width: result.width, height: result.height });
+        setCustomWidth(result.width);
+        setCustomHeight(result.height);
+        setRawMetadata(result.metadata);
+
+        toast.success('RAW image converted successfully!');
+      } catch (error) {
+        console.error('RAW conversion error:', error);
+        toast.error('Failed to convert RAW image. The format may not be supported.');
+        handleClear();
+      } finally {
+        setIsConvertingRaw(false);
+      }
+    } else {
+      // Handle standard image (existing logic)
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const url = e.target?.result as string;
+        setPreviewUrl(url);
+
+        // Get image dimensions
+        const img = new window.Image();
+        img.onload = () => {
+          setOriginalDimensions({ width: img.width, height: img.height });
+          // Initialize crop area to full image
+          setCropArea({ x: 0, y: 0, width: img.width, height: img.height });
+          // Initialize resize dimensions
+          setCustomWidth(img.width);
+          setCustomHeight(img.height);
+        };
+        img.src = url;
       };
-      img.src = url;
-    };
-    reader.readAsDataURL(selectedFile);
+      reader.readAsDataURL(selectedFile);
+    }
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -200,6 +254,11 @@ export default function ImageModifier() {
     setSelectedPreset('custom');
     setProgress(0);
     setCurrentStep('');
+    // Clear RAW-related state
+    setIsRawFile(false);
+    setRawMetadata(null);
+    setRawConversionProgress(0);
+    setRawConversionMessage('');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -610,8 +669,23 @@ export default function ImageModifier() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl p-6">
+          {/* RAW Conversion Loading State */}
+          {isConvertingRaw && (
+            <div className="border-2 border-purple-300 bg-purple-50 rounded-xl p-12 text-center">
+              <div className="animate-spin mx-auto mb-4 w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full" />
+              <p className="text-lg font-medium text-purple-700 mb-2">
+                Converting RAW Image...
+              </p>
+              <p className="text-sm text-purple-600 mb-4">{rawConversionMessage}</p>
+              <Progress value={rawConversionProgress} className="h-2 max-w-xs mx-auto" />
+              <p className="text-xs text-purple-500 mt-2">
+                RAW conversion can take 10-30 seconds for large files
+              </p>
+            </div>
+          )}
+
           {/* File Upload */}
-          {!file ? (
+          {!file && !isConvertingRaw ? (
             <div
               onDrop={handleDrop}
               onDragOver={handleDragOver}
@@ -622,11 +696,11 @@ export default function ImageModifier() {
               <p className="text-lg font-medium text-gray-700 mb-2">
                 Drop your image here or click to upload
               </p>
-              <p className="text-sm text-gray-500">Supports: PNG, JPG, WebP, AVIF, SVG</p>
+              <p className="text-sm text-gray-500">Supports: PNG, JPG, WebP, AVIF, SVG + RAW formats (DNG, CR2, NEF, ARW, RAF, etc.)</p>
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/*,.dng,.cr2,.cr3,.nef,.arw,.raf,.orf,.rw2,.pef,.srw,.x3f,.raw,.3fr,.kdc,.dcr,.mrw,.erf,.mef,.mos,.rwl,.srf"
                 onChange={handleFileSelect}
                 className="hidden"
               />
@@ -641,6 +715,23 @@ export default function ImageModifier() {
                     <p className="text-sm text-gray-500">
                       {originalDimensions.width} × {originalDimensions.height}px | {formatFileSize(originalFileSize)}
                     </p>
+                    {rawMetadata && (
+                      <div className="mt-1 text-xs text-gray-500 flex flex-wrap gap-x-3">
+                        {rawMetadata.make && rawMetadata.model && (
+                          <span>Camera: {rawMetadata.make} {rawMetadata.model}</span>
+                        )}
+                        {rawMetadata.iso && <span>ISO: {rawMetadata.iso}</span>}
+                        {rawMetadata.aperture && <span>f/{rawMetadata.aperture.toFixed(1)}</span>}
+                        {rawMetadata.shutterSpeed && (
+                          <span>
+                            {rawMetadata.shutterSpeed >= 1
+                              ? `${rawMetadata.shutterSpeed}s`
+                              : `1/${Math.round(1 / rawMetadata.shutterSpeed)}s`}
+                          </span>
+                        )}
+                        {rawMetadata.focalLength && <span>{Math.round(rawMetadata.focalLength)}mm</span>}
+                      </div>
+                    )}
                   </div>
                   <Button variant="outline" size="sm" onClick={handleClear}>
                     <X size={16} className="mr-2" />
