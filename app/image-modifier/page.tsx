@@ -202,7 +202,8 @@ export default function ImageModifier() {
         toast.success('RAW image converted successfully!');
       } catch (error) {
         console.error('RAW conversion error:', error);
-        toast.error('Failed to convert RAW image. The format may not be supported.');
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        toast.error(`RAW conversion failed: ${message}`);
         handleClear();
       } finally {
         setIsConvertingRaw(false);
