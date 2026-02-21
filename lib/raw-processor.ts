@@ -1,3 +1,5 @@
+import LibRaw from 'libraw-wasm';
+
 // RAW file extensions supported
 export const RAW_EXTENSIONS = [
   '.dng',   // Adobe Digital Negative
@@ -68,80 +70,105 @@ export interface RawConversionResult {
 }
 
 export interface RawConversionProgress {
-  stage: 'uploading' | 'processing' | 'complete';
+  stage: 'loading' | 'processing' | 'complete';
   progress: number;
   message: string;
 }
 
 /**
- * Convert a RAW file to a displayable PNG using server-side processing
+ * Convert a RAW file to a displayable PNG using client-side WebAssembly processing
+ * Files never leave the user's device - 100% client-side
  */
 export async function convertRawToImage(
   file: File,
   onProgress?: (progress: RawConversionProgress) => void
 ): Promise<RawConversionResult> {
   onProgress?.({
-    stage: 'uploading',
+    stage: 'loading',
     progress: 10,
-    message: 'Uploading RAW file...'
+    message: 'Reading RAW file...'
   });
 
-  // Create FormData with the file
-  const formData = new FormData();
-  formData.append('file', file);
-
-  // Add timeout with AbortController (55s to be under Vercel's 60s limit)
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 55000);
-
   try {
-    onProgress?.({
-      stage: 'processing',
-      progress: 40,
-      message: 'Converting RAW image...'
-    });
-
-    // Send to API route with abort signal
-    const response = await fetch('/api/convert-raw', {
-      method: 'POST',
-      body: formData,
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    // Handle non-OK responses
-    if (!response.ok) {
-      let errorMessage = `Server error: ${response.status}`;
-      try {
-        const errorData = await response.json();
-        errorMessage = errorData.error || errorMessage;
-      } catch {
-        // Response wasn't JSON - might be HTML error page
-      }
-      throw new Error(errorMessage);
-    }
-
-    const result = await response.json();
-
-    if (!result.success) {
-      throw new Error(result.error || 'Conversion failed');
-    }
+    // Read file as ArrayBuffer
+    const arrayBuffer = await file.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
 
     onProgress?.({
       stage: 'processing',
-      progress: 80,
+      progress: 30,
+      message: 'Decoding RAW image...'
+    });
+
+    // Create LibRaw instance and process the file
+    const raw = new LibRaw();
+    await raw.open(uint8Array, {
+      useCameraWb: true,  // Use camera white balance
+      halfSize: false,    // Full resolution
+      outputBps: 8,       // 8-bit output
+    });
+
+    onProgress?.({
+      stage: 'processing',
+      progress: 50,
+      message: 'Processing image data...'
+    });
+
+    // Get metadata and image data
+    const metadata = await raw.metadata();
+    const imageData = await raw.imageData();
+
+    onProgress?.({
+      stage: 'processing',
+      progress: 70,
+      message: 'Creating displayable image...'
+    });
+
+    // Convert RGB pixel data to PNG using canvas
+    const width = imageData.width;
+    const height = imageData.height;
+    const rgbData = imageData.data;
+
+    // Create canvas to render the image
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) {
+      throw new Error('Failed to create canvas context');
+    }
+
+    // Create ImageData from RGB pixels (need to convert RGB to RGBA)
+    const imgData = ctx.createImageData(width, height);
+    const pixels = imgData.data;
+
+    // Convert RGB to RGBA
+    for (let i = 0, j = 0; i < rgbData.length; i += 3, j += 4) {
+      pixels[j] = rgbData[i];       // R
+      pixels[j + 1] = rgbData[i + 1]; // G
+      pixels[j + 2] = rgbData[i + 2]; // B
+      pixels[j + 3] = 255;            // A (fully opaque)
+    }
+
+    ctx.putImageData(imgData, 0, 0);
+
+    onProgress?.({
+      stage: 'processing',
+      progress: 90,
       message: 'Finalizing...'
     });
 
-    // Convert data URL to blob - with error handling
-    let blob: Blob;
-    try {
-      const base64Response = await fetch(result.dataUrl);
-      blob = await base64Response.blob();
-    } catch {
-      throw new Error('Failed to process converted image');
-    }
+    // Convert canvas to blob and data URL
+    const blob = await new Promise<Blob>((resolve, reject) => {
+      canvas.toBlob(
+        (b) => b ? resolve(b) : reject(new Error('Failed to create blob')),
+        'image/png',
+        1.0
+      );
+    });
+
+    const dataUrl = canvas.toDataURL('image/png');
 
     onProgress?.({
       stage: 'complete',
@@ -151,19 +178,24 @@ export async function convertRawToImage(
 
     return {
       blob,
-      dataUrl: result.dataUrl,
-      width: result.width,
-      height: result.height,
-      metadata: {},
+      dataUrl,
+      width,
+      height,
+      metadata: {
+        make: metadata.make,
+        model: metadata.model,
+        iso: metadata.iso_speed,
+        shutterSpeed: metadata.shutter,
+        aperture: metadata.aperture,
+        focalLength: metadata.focal_len,
+      },
     };
   } catch (error) {
-    clearTimeout(timeoutId);
+    console.error('RAW conversion error:', error);
 
-    // Handle timeout specifically
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error('Request timed out. The file may be too large.');
+    if (error instanceof Error) {
+      throw new Error(`RAW conversion failed: ${error.message}`);
     }
-
-    throw error;
+    throw new Error('RAW conversion failed: Unknown error');
   }
 }

@@ -694,7 +694,7 @@ export default function ImageModifier() {
               </p>
               <p className="text-sm text-gray-500 mb-3">Supports: PNG, JPG, WebP, AVIF, SVG + RAW formats (DNG, CR2, NEF, ARW, RAF, etc.)</p>
               <p className="text-xs text-gray-400">
-                🔒 Standard images processed locally. RAW files require temporary server processing (never stored).
+                🔒 All images processed locally in your browser. Your files never leave your device.
               </p>
               <input
                 ref={fileInputRef}
